@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Havya Pandya, 3D Artist</title>
+<meta name="description" content="Havya Pandya is a 3D artist in Ahmedabad, India, making game-ready assets, product visualizations and architectural walkthroughs in Blender, Maya and Unreal Engine 5.">
+<meta property="og:title" content="Havya Pandya, 3D Artist">
+<meta property="og:description" content="Game art, product visualization and architectural walkthroughs.">
+<meta property="og:image" content="https://sukuna089.github.io/havyasportfolio/assets/unreal-engine-environments-2.jpg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0E1319">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Hanken+Grotesk:wght@400;500;600&display=swap">
+<style>
+:root{
+  --night:#0E1319;
+  --night-2:#151C25;
+  --silver:#DCE1E4;
+  --fog:#8E99A4;
+  --tungsten:#E7A64E;
+  --line:rgba(220,225,228,.14);
+  --serif:"Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
+  --sans:"Hanken Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --gutter:clamp(16px, 4vw, 56px);
+  --bar:9vh;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--night);color:var(--silver);scroll-snap-type:y proximity}
+body{font:400 1.0625rem/1.6 var(--sans);background:var(--night);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+img,video{display:block;max-width:100%}
+a{color:inherit}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--tungsten);outline-offset:3px}
+.skip{position:absolute;left:-999px;top:8px;background:var(--silver);color:var(--night);padding:8px 14px;z-index:99}
+.skip:focus{left:8px}
+
+/* ---------- header ---------- */
+.top{position:fixed;inset:0 0 auto 0;z-index:30;display:flex;justify-content:space-between;align-items:center;
+  padding:18px var(--gutter) 28px;font-size:.9375rem;color:var(--silver);text-shadow:0 1px 12px rgba(0,0,0,.5);
+  background:linear-gradient(180deg,rgba(14,19,25,.55),rgba(14,19,25,0))}
+.top a{text-decoration:none}
+.top .mark{font-family:var(--serif);font-size:1.25rem}
+.top nav{display:flex;gap:clamp(16px,3vw,32px)}
+.top nav a{opacity:.8}
+.top nav a:hover{opacity:1}
+
+/* ---------- opening title ---------- */
+.open{position:relative;height:100svh;min-height:560px;overflow:hidden;scroll-snap-align:start;background:#000}
+.open video,.open .poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.open .shade{position:absolute;inset:0;background:
+  linear-gradient(180deg, rgba(14,19,25,.1) 25%, rgba(14,19,25,.8) 100%),
+  linear-gradient(90deg, rgba(14,19,25,.45) 0%, rgba(14,19,25,0) 55%)}
+.open .bar{position:absolute;left:0;right:0;height:var(--bar);background:#000;z-index:3;
+  animation:shut 1.6s cubic-bezier(.7,0,.2,1) .2s both}
+.open .bar.t{top:0} .open .bar.b{bottom:0}
+@keyframes shut{from{height:50.5%}to{height:var(--bar)}}
+.title{position:absolute;z-index:2;left:var(--gutter);right:var(--gutter);bottom:calc(var(--bar) + clamp(24px,5vh,56px))}
+.title h1{font-family:var(--serif);font-weight:400;font-size:clamp(3.4rem,11.5vw,11rem);line-height:.9;letter-spacing:-.02em;
+  animation:rise 1.2s cubic-bezier(.2,.7,.2,1) 1.3s both}
+.title .role{font-family:var(--serif);font-style:italic;font-size:clamp(1.25rem,2.4vw,2rem);line-height:1.25;margin-top:.4em;max-width:30ch;
+  animation:rise 1.2s cubic-bezier(.2,.7,.2,1) 1.5s both}
+.title .meta{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center;margin-top:28px;color:var(--fog);font-size:.9375rem;
+  animation:rise 1.2s cubic-bezier(.2,.7,.2,1) 1.7s both}
+.title .meta a{color:var(--silver)}
+.cta{display:inline-block;padding:12px 22px;border:1px solid var(--silver);text-decoration:none;color:var(--silver);transition:background .2s,color .2s}
+.cta:hover{background:var(--silver);color:var(--night)}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+/* ---------- the reel ---------- */
+.reel{position:relative}
+.snap{position:absolute;left:0;width:1px;height:100vh;scroll-snap-align:start}
+.stage{position:sticky;top:0;height:100vh;overflow:hidden}
+.track{display:flex;height:100%;will-change:transform}
+.shot{position:relative;flex:0 0 100vw;height:100%;overflow:hidden;background:#000}
+.shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scale(1.04);transition:transform 1.4s cubic-bezier(.2,.7,.2,1)}
+.shot.on img{transform:scale(1)}
+.shot::after{content:"";position:absolute;inset:0;pointer-events:none;background:
+  linear-gradient(90deg, rgba(14,19,25,.82) 0%, rgba(14,19,25,.35) 38%, rgba(14,19,25,0) 60%),
+  linear-gradient(0deg, rgba(14,19,25,.7) 0%, rgba(14,19,25,0) 40%)}
+.slate{position:absolute;z-index:2;left:var(--gutter);bottom:150px;max-width:min(560px,80vw)}
+.slate .no{color:var(--tungsten);font-size:.9375rem;font-variant-numeric:tabular-nums}
+.slate h2{font-family:var(--serif);font-weight:400;font-size:clamp(2.6rem,6.4vw,6rem);line-height:.95;letter-spacing:-.015em;margin:.18em 0 .3em}
+.slate p{color:#C3CAD0;max-width:42ch}
+.slate .award{display:inline-block;margin-top:14px;font-family:var(--serif);font-style:italic;font-size:1.125rem;color:var(--tungsten)}
+.slate .frames{margin-top:22px}
+.shot .hit{position:absolute;inset:0;z-index:1}
+
+/* timeline */
+.timeline{position:absolute;z-index:4;left:var(--gutter);right:var(--gutter);bottom:28px;display:flex;gap:6px;align-items:end}
+.timeline a{position:relative;flex:1;height:54px;overflow:hidden;opacity:.45;transition:opacity .3s,height .3s;border-top:2px solid transparent}
+.timeline a img{width:100%;height:100%;object-fit:cover}
+.timeline a:hover{opacity:.8}
+.timeline a[aria-current="true"]{opacity:1;height:66px;border-top-color:var(--tungsten)}
+.timeline a span{text-shadow:0 1px 4px #000;position:absolute;left:0;right:0;bottom:0;padding:2px 6px;font-size:.75rem;background:linear-gradient(0deg,rgba(0,0,0,.7),transparent);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.playhead{position:absolute;z-index:5;left:var(--gutter);right:var(--gutter);bottom:100px;height:1px;background:var(--line)}
+.playhead i{position:absolute;left:0;top:-3px;width:1px;height:7px;background:var(--tungsten)}
+.playhead b{display:block;height:1px;background:var(--tungsten);width:0}
+
+/* ---------- outtakes ---------- */
+section.page{padding:clamp(80px,14vh,160px) var(--gutter);scroll-snap-align:start}
+.page h2{font-family:var(--serif);font-weight:400;font-size:clamp(2.2rem,5vw,4rem);line-height:1;letter-spacing:-.01em}
+.lede{color:var(--fog);margin-top:14px;max-width:52ch}
+.sheet{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(10px,1.6vw,20px);margin-top:48px}
+.sheet button{text-align:left}
+.sheet figure{background:var(--night-2)}
+.sheet img{aspect-ratio:16/10;width:100%;object-fit:cover;transition:opacity .3s}
+.sheet button:hover img{opacity:.8}
+.sheet figcaption{padding:12px 2px 0;font-size:.9375rem}
+.sheet figcaption em{display:block;color:var(--fog);font-style:normal}
+
+/* ---------- end credits ---------- */
+.credits{text-align:center;background:linear-gradient(180deg,var(--night) 0%,#090C10 100%)}
+.credits h2{margin-bottom:56px}
+.roll{display:grid;grid-template-columns:1fr 1fr;column-gap:28px;row-gap:22px;max-width:880px;margin:0 auto}
+.roll dt{text-align:right;color:var(--fog);font-size:.9375rem;padding-top:.2em}
+.roll dd{text-align:left;font-family:var(--serif);font-size:clamp(1.125rem,1.7vw,1.375rem);line-height:1.35}
+.bio{max-width:58ch;margin:72px auto 0;font-family:var(--serif);font-size:clamp(1.125rem,1.6vw,1.3rem);line-height:1.6;color:#C3CAD0}
+
+/* ---------- contact ---------- */
+.contact{background:#090C10;padding-bottom:64px}
+.contact .big{display:inline-block;font-family:var(--serif);font-size:clamp(1.7rem,5.6vw,5rem);line-height:1.05;margin-top:28px;
+  text-decoration:none;border-bottom:1px solid var(--line);transition:border-color .3s, color .3s;word-break:break-word}
+.contact .big:hover{border-color:var(--tungsten);color:var(--tungsten)}
+.links{display:flex;flex-wrap:wrap;gap:12px 32px;margin-top:48px}
+.links a{text-decoration:none;color:var(--fog)}
+.links a:hover{color:var(--silver)}
+.foot{margin-top:96px;padding-top:22px;border-top:1px solid var(--line);color:var(--fog);font-size:.875rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+
+/* ---------- viewer ---------- */
+dialog{border:0;padding:0;margin:0;width:100vw;height:100vh;max-width:none;max-height:none;background:rgba(6,8,11,.97);color:var(--silver)}
+dialog::backdrop{background:#000}
+.v{display:grid;grid-template-rows:auto 1fr auto;height:100%}
+.v header{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:18px var(--gutter)}
+.v h3{font-family:var(--serif);font-weight:400;font-size:clamp(1.4rem,2.6vw,2rem)}
+.v .count{color:var(--fog);font-variant-numeric:tabular-nums;margin-left:14px;font-size:.9375rem}
+.v .close{padding:8px 0;color:var(--fog)}
+.v .close:hover{color:var(--silver)}
+.v .frame{position:relative;display:flex;align-items:center;justify-content:center;min-height:0;padding:0 var(--gutter)}
+.v .frame img,.v .frame video{max-height:100%;max-width:100%;object-fit:contain}
+.v .nav{position:absolute;top:50%;transform:translateY(-50%);width:52px;height:52px;border:1px solid var(--line);background:rgba(14,19,25,.6);font-size:1.4rem}
+.v .nav:hover{border-color:var(--silver)}
+.v .prev{left:var(--gutter)} .v .next{right:var(--gutter)}
+.v .thumbs{display:flex;gap:8px;justify-content:center;padding:16px var(--gutter) 22px;overflow-x:auto}
+.v .thumbs button{flex:0 0 96px;height:56px;opacity:.45;border-top:2px solid transparent;position:relative;background:var(--night-2)}
+.v .thumbs button[aria-current="true"]{opacity:1;border-top-color:var(--tungsten)}
+.v .thumbs img{width:100%;height:100%;object-fit:cover}
+.v .thumbs .play{position:absolute;inset:0;display:grid;place-items:center;font-size:.8125rem;background:rgba(0,0,0,.35)}
+
+/* ---------- small screens: the reel becomes a vertical stack ---------- */
+@media (max-width:760px){
+  html{scroll-snap-type:none}
+  .reel{height:auto!important}
+  .snap,.timeline,.playhead{display:none}
+  .stage{position:static;height:auto;overflow:visible}
+  .track{flex-direction:column;transform:none!important}
+  .shot{flex:none;width:100%;height:82svh;min-height:480px}
+  .shot img{transform:none}
+  .shot::after{background:linear-gradient(0deg, rgba(14,19,25,.9) 0%, rgba(14,19,25,.2) 55%, rgba(14,19,25,0) 75%)}
+  .slate{bottom:32px;right:var(--gutter);max-width:none}
+  .sheet{grid-template-columns:1fr}
+  .roll{grid-template-columns:1fr;row-gap:4px}
+  .roll dt{text-align:center;margin-top:18px}
+  .roll dd{text-align:center}
+  .v .nav{top:auto;bottom:-64px;transform:none}
+  .v .frame{padding:0}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .shot img{transform:none}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#reel">Skip to the work</a>
+
+<header class="top">
+  <a class="mark" href="#">Havya Pandya</a>
+  <nav aria-label="Main">
+    <a href="#reel">Work</a>
+    <a href="#credits">About</a>
+    <a href="#contact">Contact</a>
+  </nav>
+</header>
+
+<section class="open" aria-label="Introduction">
+  <img class="poster" src="../assets/unreal-engine-environments-1.jpg" alt="">
+  <video autoplay muted loop playsinline preload="auto" poster="../assets/unreal-engine-environments-1.jpg" aria-hidden="true">
+    <source src="../assets/unreal-engine-environments-3.mp4" type="video/mp4">
+  </video>
+  <div class="shade"></div><div class="bar t"></div><div class="bar b"></div>
+  <div class="title">
+    <h1>Havya Pandya</h1>
+    <p class="role">3D artist for games, products and architecture.</p>
+    <div class="meta">
+      <a class="cta" href="#reel">Watch the work</a>
+      <span>Open to full-time, freelance and remote roles</span>
+      <a href="mailto:havyapandya4@gmail.com">havyapandya4@gmail.com</a>
+    </div>
+  </div>
+</section>
+
+<main>
+<section class="reel" id="reel" aria-label="Selected work">
+  <div class="stage">
+    <div class="track"></div>
+    <div class="playhead" aria-hidden="true"><b></b></div>
+    <nav class="timeline" aria-label="Jump to a project"></nav>
+  </div>
+</section>
+
+<section class="page" id="outtakes" aria-labelledby="outtakes-h">
+  <h2 id="outtakes-h">Outtakes</h2>
+  <p class="lede">Model sheets and studies that didn’t make the main cut.</p>
+  <div class="sheet"></div>
+</section>
+
+<section class="page credits" id="credits" aria-labelledby="credits-h">
+  <h2 id="credits-h">Credits</h2>
+  <dl class="roll">
+    <dt>Artist</dt><dd>Havya Pandya</dd>
+    <dt>Based in</dt><dd>Ahmedabad, Gujarat, India</dd>
+    <dt>Disciplines</dt><dd>Modeling, PBR texturing, UV unwrapping, lighting and rendering</dd>
+    <dt>Tools</dt><dd>Blender, Autodesk Maya, 3ds Max, ZBrush, Substance Painter, Marmoset Toolbag, Unreal Engine 5, Unity</dd>
+    <dt>Shipped</dt><dd>Color Drop for Android, as sole 3D artist</dd>
+    <dt>Award</dt><dd>Best Project, Gujarat University campus walkthrough</dd>
+    <dt>Education</dt><dd>M.Sc. Animation, Gujarat University, 2024–2026<br>B.Sc. Animation, Gujarat University, 2021–2024, CGPA 9.0</dd>
+  </dl>
+  <p class="bio">Over four years I’ve built game-ready assets, photoreal product renders and architectural walkthroughs for coursework, freelance clients and a published game. Right now I’m going deeper into real-time rendering with Lumen and Nanite in Unreal Engine 5.</p>
+</section>
+
+<section class="page contact" id="contact" aria-labelledby="contact-h">
+  <h2 id="contact-h">Let’s make the next one.</h2>
+  <p class="lede">I’m looking for full-time, freelance and remote work in game art, VFX and archviz.</p>
+  <a class="big" href="mailto:havyapandya4@gmail.com">havyapandya4@gmail.com</a>
+  <div class="links">
+    <a href="https://www.artstation.com/havyapandya5" target="_blank" rel="noopener">ArtStation</a>
+    <a href="https://linkedin.com/in/havyapandya" target="_blank" rel="noopener">LinkedIn</a>
+    <a href="https://youtube.com/@havyapandya3072" target="_blank" rel="noopener">YouTube</a>
+    <a href="https://play.google.com/store/apps/details?id=com.shinigamistudios.colordrop" target="_blank" rel="noopener">Color Drop on Google Play</a>
+  </div>
+  <div class="foot"><span>© 2026 Havya Pandya</span><span>All renders by Havya Pandya</span></div>
+</section>
+</main>
+
+<dialog id="viewer" aria-labelledby="v-title">
+  <div class="v">
+    <header>
+      <div><h3 id="v-title" style="display:inline"></h3><span class="count" id="v-count"></span></div>
+      <button class="close" id="v-close">Close</button>
+    </header>
+    <div class="frame" id="v-frame">
+      <button class="nav prev" id="v-prev" aria-label="Previous frame">‹</button>
+      <button class="nav next" id="v-next" aria-label="Next frame">›</button>
+    </div>
+    <div class="thumbs" id="v-thumbs"></div>
+  </div>
+</dialog>
+
+<script>
+(() => {
+  const A = f => '../assets/' + f;
+  const SHOTS = [
+    { title:'Unreal Engine Environments', line:'Real-time environments in Unreal Engine 5, lit with Lumen and built with Nanite geometry.',
+      cover:'unreal-engine-environments-2.jpg',
+      frames:['unreal-engine-environments-2.jpg','unreal-engine-environments-1.jpg','unreal-engine-environments-5.jpg','unreal-engine-environments-3.mp4','unreal-engine-environments-4.mp4'] },
+    { title:'Gujarat University Campus', line:'An architectural walkthrough of the campus, from the clock tower to the information centre.',
+      award:'Best Project Award', cover:'gujarat-university-campus-walkthrough-1.jpg',
+      frames:[1,2,3,4,5,6].map(n=>'gujarat-university-campus-walkthrough-'+n+'.jpg') },
+    { title:'Porsche 911 Study', line:'A vehicle study about cinematic lighting: fog, sodium lamps and headlight bloom.',
+      cover:'porsche-911-study-1.jpg', frames:['porsche-911-study-1.jpg','porsche-911-study-2.jpg'] },
+    { title:'Samurai Armor', line:'Hard-surface character armor and katana, lit low and cold.',
+      cover:'sci-fi-armor-suit-2.jpg', frames:['sci-fi-armor-suit-2.jpg','sci-fi-armor-suit-1.jpg','samurai-1.jpg'] },
+    { title:'Sci-Fi Helmet', line:'A hard-surface helmet presented as a clean studio product render.',
+      cover:'sci-fi-helmet-1.jpg', frames:['sci-fi-helmet-1.jpg','sci-fi-helmet-2.jpg'] },
+    { title:'Smartwatch', line:'Photoreal consumer-product visualization with metal, glass and foliage.',
+      cover:'smartwatch-1.jpg', frames:['smartwatch-1.jpg','smartwatch-2.jpg'] },
+    { title:'Console Controller', line:'A photoreal controller and console set in a lived-in interior.',
+      cover:'console-controller-1.jpg', frames:['console-controller-1.jpg','console-controller-2.jpg'] },
+    { title:'Katana', line:'A game-ready prop: blade, handle wrap and lacquered scabbard.',
+      cover:'katana-2.jpg', frames:['katana-2.jpg','katana-1.jpg'] },
+    { title:'Vintage Radio', line:'Product modeling shown as clay model sheets from every side.',
+      cover:'vintage-radio-1.jpg', frames:[1,2,3,4,5].map(n=>'vintage-radio-'+n+'.jpg') },
+  ];
+  const OUTTAKES = [
+    { title:'Robot Study', line:'Character model sheet', cover:'robot-study-1.jpg', frames:['robot-study-1.jpg'] },
+    { title:'Walkie-Talkie', line:'Product model sheet', cover:'walkie-talkie-1.jpg', frames:['walkie-talkie-1.jpg'] },
+    { title:'Upasna', line:'Architectural render', cover:'upasna-1.jpg', frames:['upasna-1.jpg'] },
+  ];
+  const isVideo = f => /\.mp4$/i.test(f);
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  const n = SHOTS.length;
+
+  // ----- build the reel -----
+  const reel = document.getElementById('reel');
+  const track = reel.querySelector('.track');
+  const timeline = reel.querySelector('.timeline');
+  reel.style.height = (n * 100) + 'vh';
+  SHOTS.forEach((s, i) => {
+    const snap = document.createElement('div');
+    snap.className = 'snap'; snap.id = 'shot-' + (i+1); snap.style.top = (i * 100) + 'vh';
+    reel.prepend(snap);
+    const count = s.frames.length;
+    const art = document.createElement('article');
+    art.className = 'shot'; art.setAttribute('aria-label', s.title);
+    art.innerHTML = `
+      <img src="${A(s.cover)}" alt="${esc(s.title)} render" ${i > 1 ? 'loading="lazy"' : ''}>
+      <button class="hit" aria-label="Open ${esc(s.title)}, ${count} frames" data-i="${i}"></button>
+      <div class="slate">
+        <div class="no">Shot ${i+1} of ${n}</div>
+        <h2>${esc(s.title)}</h2>
+        <p>${esc(s.line)}</p>
+        ${s.award ? `<div class="award">${s.award}</div>` : ''}
+        <div class="frames"><button class="cta" data-i="${i}">View ${count} ${count === 1 ? 'frame' : 'frames'}</button></div>
+      </div>`;
+    track.appendChild(art);
+    const t = document.createElement('a');
+    t.href = '#shot-' + (i+1);
+    t.innerHTML = `<img src="${A(s.cover)}" alt="" loading="lazy"><span>${esc(s.title)}</span>`;
+    t.setAttribute('aria-label', s.title);
+    timeline.appendChild(t);
+  });
+  track.addEventListener('click', e => {
+    const b = e.target.closest('[data-i]'); if (b) openViewer(SHOTS[+b.dataset.i]);
+  });
+
+  // ----- outtakes -----
+  const sheet = document.querySelector('.sheet');
+  OUTTAKES.forEach(o => {
+    const b = document.createElement('button');
+    b.innerHTML = `<figure><img src="${A(o.cover)}" alt="${esc(o.title)}" loading="lazy"></figure>
+      <figcaption>${esc(o.title)}<em>${esc(o.line)}</em></figcaption>`;
+    b.addEventListener('click', () => openViewer(o));
+    sheet.appendChild(b);
+  });
+
+  // ----- horizontal scroll driven by vertical scroll -----
+  const shots = [...track.children];
+  const thumbs = [...timeline.children];
+  const bar = reel.querySelector('.playhead b');
+  const wide = matchMedia('(min-width: 761px)');
+  let current = -1, ticking = false;
+  function update(){
+    ticking = false;
+    if (!wide.matches) { shots.forEach(s => s.classList.add('on')); return; }
+    const total = reel.offsetHeight - innerHeight;
+    const p = Math.min(1, Math.max(0, (scrollY - reel.offsetTop) / total));
+    track.style.transform = `translate3d(${-p * (n - 1) * 100}vw,0,0)`;
+    bar.style.width = (p * 100) + '%';
+    const idx = Math.round(p * (n - 1));
+    if (idx !== current) {
+      current = idx;
+      shots.forEach((s, k) => s.classList.toggle('on', k === idx));
+      thumbs.forEach((t, k) => t.setAttribute('aria-current', k === idx ? 'true' : 'false'));
+    }
+  }
+  const req = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+  addEventListener('scroll', req, { passive:true });
+  addEventListener('resize', req);
+  update();
+
+  // arrow keys step between shots while the reel is on screen
+  addEventListener('keydown', e => {
+    if (viewer.open || !wide.matches) return;
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    const r = reel.getBoundingClientRect();
+    if (r.top > 1 || r.bottom < innerHeight - 1) return;
+    e.preventDefault();
+    const next = Math.min(n - 1, Math.max(0, current + (e.key === 'ArrowRight' ? 1 : -1)));
+    document.getElementById('shot-' + (next + 1)).scrollIntoView({ behavior:'smooth' });
+  });
+
+  // ----- viewer -----
+  const viewer = document.getElementById('viewer');
+  const vFrame = document.getElementById('v-frame');
+  const vThumbs = document.getElementById('v-thumbs');
+  const vTitle = document.getElementById('v-title');
+  const vCount = document.getElementById('v-count');
+  const vPrev = document.getElementById('v-prev'), vNext = document.getElementById('v-next');
+  let set = null, at = 0;
+  function openViewer(s){
+    set = s; at = 0;
+    vTitle.textContent = s.title;
+    vThumbs.innerHTML = '';
+    s.frames.forEach((f, k) => {
+      const b = document.createElement('button');
+      b.setAttribute('aria-label', 'Frame ' + (k+1));
+      b.innerHTML = isVideo(f)
+        ? `<span class="play">Video</span>`
+        : `<img src="${A(f)}" alt="">`;
+      b.addEventListener('click', () => show(k));
+      vThumbs.appendChild(b);
+    });
+    const many = s.frames.length > 1;
+    vPrev.hidden = vNext.hidden = vThumbs.hidden = !many;
+    show(0);
+    viewer.showModal();
+  }
+  function show(k){
+    at = (k + set.frames.length) % set.frames.length;
+    vFrame.querySelectorAll('img,video').forEach(el => el.remove());
+    const f = set.frames[at];
+    let el;
+    if (isVideo(f)) {
+      el = document.createElement('video');
+      Object.assign(el, { src:A(f), controls:true, autoplay:true, muted:true, loop:true, playsInline:true });
+    } else {
+      el = document.createElement('img');
+      el.src = A(f); el.alt = set.title + ', frame ' + (at+1);
+    }
+    vFrame.prepend(el);
+    vCount.textContent = (at+1) + ' of ' + set.frames.length;
+    [...vThumbs.children].forEach((b, i) => b.setAttribute('aria-current', i === at ? 'true' : 'false'));
+  }
+  vPrev.addEventListener('click', () => show(at - 1));
+  vNext.addEventListener('click', () => show(at + 1));
+  document.getElementById('v-close').addEventListener('click', () => viewer.close());
+  viewer.addEventListener('close', () => vFrame.querySelectorAll('video').forEach(v => v.pause()));
+  viewer.addEventListener('click', e => { if (e.target === vFrame) viewer.close(); });
+  viewer.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') show(at + 1);
+    if (e.key === 'ArrowLeft') show(at - 1);
+  });
+})();
+</script>
+</body>
+</html>
