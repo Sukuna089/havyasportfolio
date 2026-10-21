@@ -654,10 +654,12 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
   const root = document.documentElement;
 
   // boot sequence, once per browser session
+  // the reel's height is set by script, so jump to a #section once the layout is final
+  function jumpToHash(){ const t = location.hash && document.getElementById(location.hash.slice(1)); if (t) requestAnimationFrame(() => t.scrollIntoView()); }
   const boot = document.getElementById('boot');
   let booted = false;
   try { booted = sessionStorage.getItem('booted') === '1'; } catch (e) {}
-  if (calm || booted) boot.remove();
+  if (calm || booted) { boot.remove(); jumpToHash(); }
   else {
     root.classList.add('booting');
     const BOOT = [
@@ -676,6 +678,7 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
       try { sessionStorage.setItem('booted', '1'); } catch (e) {}
       ['keydown','pointerdown'].forEach(ev => removeEventListener(ev, finish));
       setTimeout(() => boot.remove(), 600);
+      jumpToHash();
     };
     const step = () => {
       if (li < BOOT.length) {
@@ -875,7 +878,9 @@ async function start(){
   let gltf;
   try {
     gltf = await loader.loadAsync('../assets/models/porsche-911.glb', ev => {
-      if (ev.total) { const p = ev.loaded / ev.total; meter.style.width = (p * 100) + '%'; label.textContent = 'Loading model ' + Math.round(p * 100) + '%'; }
+      const mb = (ev.loaded / 1048576).toFixed(1);
+      const p = Math.min(1, ev.loaded / 3723824);
+      meter.style.width = (p * 100) + '%'; label.textContent = 'Loading model ' + mb + ' MB';
     });
   } catch (e) { label.textContent = 'The model failed to load. Refresh to try again.'; return; }
 
