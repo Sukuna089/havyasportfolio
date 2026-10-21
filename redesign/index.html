@@ -99,11 +99,22 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:60;
 .title .meta .btn{color:var(--void)}
 
 /* ---------- the reel ---------- */
-.reel{position:relative}
-.snap{position:absolute;left:0;width:1px;height:100vh;scroll-snap-align:start}
-.stage{position:sticky;top:0;height:100vh;overflow:hidden;background:#000}
-.track{display:flex;height:100%;will-change:transform}
-.shot{position:relative;flex:0 0 100vw;height:100%;overflow:hidden;background:#000}
+.reel{position:relative;scroll-snap-align:start}
+.stage{position:relative;height:100svh;min-height:600px;overflow:hidden;background:#000}
+.track{display:flex;height:100%;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none}
+.track::-webkit-scrollbar{display:none}
+.track .shot{scroll-snap-align:start;scroll-snap-stop:always}
+.reel-nav{position:absolute;z-index:5;top:50%;transform:translateY(-50%);width:52px;height:52px;display:grid;place-items:center;
+  font:400 1.3rem var(--mono);color:var(--cyan);background:rgba(7,6,11,.75);box-shadow:inset 0 0 0 1px var(--cyan);
+  clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));transition:background .15s,color .15s,opacity .2s}
+.reel-nav:hover{background:var(--cyan);color:var(--void)}
+.reel-nav:disabled{opacity:.25;pointer-events:none}
+.reel-nav.prev{left:calc(var(--gutter) - 40px)} .reel-nav.next{right:calc(var(--gutter) - 40px)}
+@media (min-width:761px){.reel-nav.prev{left:12px} .reel-nav.next{right:12px}}
+.skipwork{position:absolute;z-index:5;right:var(--gutter);top:76px;font:400 .8125rem var(--mono);text-transform:uppercase;color:var(--dim);text-decoration:none;
+  background:rgba(7,6,11,.7);padding:6px 10px}
+.skipwork:hover{color:var(--cyan)}
+.shot{position:relative;flex:0 0 100%;height:100%;overflow:hidden;background:#000}
 .shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:contrast(1.08) saturate(1.1);transform:scale(1.05);transition:transform 1.4s cubic-bezier(.2,.7,.2,1)}
 .shot.on img{transform:scale(1)}
 .shot::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:
@@ -120,7 +131,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:60;
    linear-gradient(var(--pink),var(--pink)) 0 100%/2px 28px no-repeat,
    linear-gradient(var(--pink),var(--pink)) 100% 100%/28px 2px no-repeat,
    linear-gradient(var(--pink),var(--pink)) 100% 100%/2px 28px no-repeat}
-.readout{position:absolute;z-index:3;top:86px;right:calc(var(--gutter) + 18px);padding:8px 12px;background:rgba(7,6,11,.72);box-shadow:inset -2px 0 0 var(--cyan);text-align:right;font:400 .8125rem/1.6 var(--mono);color:var(--cyan);text-transform:uppercase;letter-spacing:.05em}
+.readout{position:absolute;z-index:3;top:118px;right:calc(var(--gutter) + 18px);padding:8px 12px;background:rgba(7,6,11,.72);box-shadow:inset -2px 0 0 var(--cyan);text-align:right;font:400 .8125rem/1.6 var(--mono);color:var(--cyan);text-transform:uppercase;letter-spacing:.05em}
 .readout .rec{color:var(--pink)}
 .readout .rec::before{content:"● ";animation:blink 1.2s steps(2) infinite}
 .slate{position:absolute;z-index:3;left:calc(var(--gutter) + 18px);bottom:150px;max-width:min(600px,80vw)}
@@ -283,11 +294,15 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
   .top .status{display:none}
   .hud.tl{display:none}
   .hud.tr{top:64px}
-  .reel{height:auto!important}
-  .snap,.timeline,.playhead,.frame-hud,.readout{display:none}
-  .stage{position:static;height:auto;overflow:visible}
-  .track{flex-direction:column;transform:none!important}
-  .shot{flex:none;width:100%;height:82svh;min-height:500px;border-top:1px solid var(--line)}
+  .frame-hud,.readout,.playhead,.skipwork{display:none}
+  .stage{height:86svh;min-height:520px}
+  .timeline{bottom:14px;gap:5px}
+  .timeline a{height:4px;opacity:.5;box-shadow:none;background:var(--ice)}
+  .timeline a img,.timeline a span{display:none}
+  .timeline a[aria-current="true"]{height:4px;background:var(--pink);box-shadow:0 0 8px var(--pink)}
+  .reel-nav{top:auto;bottom:40px;transform:none;width:44px;height:44px}
+  .reel-nav.prev{left:auto;right:calc(var(--gutter) + 52px)} .reel-nav.next{right:var(--gutter)}
+  .slate{bottom:96px!important}
   .shot img{transform:none}
   .shot::before{background:linear-gradient(0deg, rgba(7,6,11,.95) 0%, rgba(7,6,11,.3) 55%, rgba(7,6,11,0) 75%)}
   .slate{left:var(--gutter);right:var(--gutter);bottom:32px;max-width:none}
@@ -348,7 +363,10 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
 <main>
 <section class="reel" id="reel" aria-label="Selected work">
   <div class="stage">
-    <div class="track"></div>
+    <div class="track" tabindex="0" aria-roledescription="carousel"></div>
+    <button class="reel-nav prev" id="reel-prev" aria-label="Previous project">&lt;</button>
+    <button class="reel-nav next" id="reel-next" aria-label="Next project">&gt;</button>
+    <a class="skipwork" href="#model">Skip past the work ↓</a>
     <div class="playhead" aria-hidden="true"><b></b></div>
     <nav class="timeline" aria-label="Jump to a project"></nav>
   </div>
@@ -513,14 +531,10 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
   const reel = document.getElementById('reel');
   const track = reel.querySelector('.track');
   const timeline = reel.querySelector('.timeline');
-  reel.style.height = (n * 100) + 'vh';
   SHOTS.forEach((s, i) => {
-    const snap = document.createElement('div');
-    snap.className = 'snap'; snap.id = 'shot-' + (i+1); snap.style.top = (i * 100) + 'vh';
-    reel.prepend(snap);
     const count = s.frames.length;
     const art = document.createElement('article');
-    art.className = 'shot'; art.setAttribute('aria-label', s.title);
+    art.className = 'shot'; art.id = 'shot-' + (i+1); art.setAttribute('aria-label', `${s.title}, ${i+1} of ${n}`);
     art.innerHTML = `
       <img src="${A(s.cover)}" alt="${esc(s.title)} render" ${i > 1 ? 'loading="lazy"' : ''}>
       <button class="hit" aria-label="Open ${esc(s.title)}, ${count} files" data-i="${i}"></button>
@@ -535,7 +549,7 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
       </div>`;
     track.appendChild(art);
     const t = document.createElement('a');
-    t.href = '#shot-' + (i+1);
+    t.href = '#shot-' + (i+1); t.dataset.go = i;
     t.innerHTML = `<img src="${A(s.cover)}" alt="" loading="lazy"><span>${pad(i+1)} ${esc(s.title)}</span>`;
     t.setAttribute('aria-label', s.title);
     timeline.appendChild(t);
@@ -554,51 +568,50 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
     sheet.appendChild(b);
   });
 
-  // ----- horizontal scroll driven by vertical scroll -----
+  // ----- one-screen gallery: projects move sideways, the page scrolls past in one go -----
   const shots = [...track.children];
   const thumbs = [...timeline.children];
   const bar = reel.querySelector('.playhead b');
+  const prevB = document.getElementById('reel-prev'), nextB = document.getElementById('reel-next');
   const wide = matchMedia('(min-width: 761px)');
   let current = -1, ticking = false;
   function activate(idx){
     current = idx;
     shots.forEach((s, k) => s.classList.toggle('on', k === idx));
     thumbs.forEach((t, k) => t.setAttribute('aria-current', k === idx ? 'true' : 'false'));
+    prevB.disabled = idx === 0; nextB.disabled = idx === n - 1;
     decrypt(shots[idx].querySelector('h2'));
+  }
+  function goTo(i){
+    i = Math.max(0, Math.min(n - 1, i));
+    track.scrollTo({ left: i * track.clientWidth, behavior: calm ? 'auto' : 'smooth' });
   }
   function update(){
     ticking = false;
-    if (!wide.matches) return;
-    const total = reel.offsetHeight - innerHeight;
-    const p = Math.min(1, Math.max(0, (scrollY - reel.offsetTop) / total));
-    track.style.transform = `translate3d(${-p * (n - 1) * 100}vw,0,0)`;
-    bar.style.width = (p * 100) + '%';
-    const idx = Math.round(p * (n - 1));
+    const max = track.scrollWidth - track.clientWidth;
+    bar.style.width = (max > 0 ? track.scrollLeft / max * 100 : 0) + '%';
+    const idx = Math.round(track.scrollLeft / track.clientWidth);
     if (idx !== current) activate(idx);
   }
   const req = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
-  addEventListener('scroll', req, { passive:true });
-  addEventListener('resize', req);
+  track.addEventListener('scroll', req, { passive:true });
+  addEventListener('resize', () => { if (current >= 0) track.scrollLeft = current * track.clientWidth; req(); });
   update();
+  prevB.addEventListener('click', () => goTo(current - 1));
+  nextB.addEventListener('click', () => goTo(current + 1));
+  timeline.addEventListener('click', e => { const a = e.target.closest('[data-go]'); if (a) { e.preventDefault(); goTo(+a.dataset.go); } });
 
-  // on phones, decrypt each title as it scrolls into view
-  if ('IntersectionObserver' in window) {
-    const io = new IntersectionObserver(es => es.forEach(e => {
-      if (e.isIntersecting && !wide.matches) { e.target.classList.add('on'); decrypt(e.target.querySelector('h2')); }
-    }), { threshold:.45 });
-    shots.forEach(s => io.observe(s));
-  }
-
-  // arrow keys step between shots while the reel fills the screen
+  // arrow keys step between projects while the gallery is mostly on screen
   addEventListener('keydown', e => {
-    if (viewer.open || !wide.matches) return;
+    if (viewer.open || e.target.matches('input, textarea')) return;
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
     const r = reel.getBoundingClientRect();
-    if (r.top > 1 || r.bottom < innerHeight - 1) return;
-    e.preventDefault();
-    const next = Math.min(n - 1, Math.max(0, current + (e.key === 'ArrowRight' ? 1 : -1)));
-    document.getElementById('shot-' + (next + 1)).scrollIntoView({ behavior:'smooth' });
+    if (r.top > innerHeight * .4 || r.bottom < innerHeight * .6) return;
+    e.preventDefault(); goTo(current + (e.key === 'ArrowRight' ? 1 : -1));
   });
+
+  // links to #shot-N open that project in the gallery
+  function shotFromHash(){ const m = /^#shot-(\d+)$/.exec(location.hash); if (m) { reel.scrollIntoView(); goTo(+m[1] - 1); return true; } return false; }
 
   // ----- viewer -----
   const viewer = document.getElementById('viewer');
@@ -655,7 +668,7 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
 
   // boot sequence, once per browser session
   // the reel's height is set by script, so jump to a #section once the layout is final
-  function jumpToHash(){ const t = location.hash && document.getElementById(location.hash.slice(1)); if (t) requestAnimationFrame(() => t.scrollIntoView()); }
+  function jumpToHash(){ if (shotFromHash()) return; const t = location.hash && document.getElementById(location.hash.slice(1)); if (t) requestAnimationFrame(() => t.scrollIntoView()); }
   const boot = document.getElementById('boot');
   let booted = false;
   try { booted = sessionStorage.getItem('booted') === '1'; } catch (e) {}
