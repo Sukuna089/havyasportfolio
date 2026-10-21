@@ -147,8 +147,8 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:60;
 
 /* ---------- sections ---------- */
 section.page{position:relative;padding:clamp(80px,14vh,150px) var(--gutter);scroll-snap-align:start}
-.page h2{font:700 clamp(2.2rem,5vw,4.2rem)/1 var(--display);text-transform:uppercase;letter-spacing:-.005em}
-.page h2 .mono{display:block;font-size:.875rem;color:var(--pink);letter-spacing:.12em;margin-bottom:12px;font-weight:400}
+.page h2,.page-h{font:700 clamp(2.2rem,5vw,4.2rem)/1 var(--display);text-transform:uppercase;letter-spacing:-.005em}
+.page h2 .mono,.page-h .mono{display:block;font-size:.875rem;color:var(--pink);letter-spacing:.12em;margin-bottom:12px;font-weight:400}
 .lede{color:var(--dim);margin-top:14px;max-width:52ch}
 
 .sheet{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(12px,1.8vw,22px);margin-top:48px}
@@ -202,6 +202,30 @@ dialog::backdrop{background:#000}
 .v .thumbs .play{position:absolute;inset:0;display:grid;place-items:center;font:400 .75rem var(--mono);color:var(--cyan)}
 
 /* ---------- small screens ---------- */
+/* ---------- live 3D model ---------- */
+.model{position:relative;padding:clamp(80px,12vh,130px) var(--gutter) 40px;scroll-snap-align:start;
+  background:radial-gradient(ellipse at 15% 85%, rgba(255,42,109,.16), transparent 55%),radial-gradient(ellipse at 85% 20%, rgba(5,217,232,.14), transparent 55%),var(--void)}
+.model .head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:20px}
+.viewport{position:relative;margin-top:36px;height:min(76vh,760px);min-height:420px;box-shadow:0 0 0 1px var(--line);overflow:hidden;
+  clip-path:polygon(0 0,calc(100% - 30px) 0,100% 30px,100% 100%,30px 100%,0 calc(100% - 30px));
+  background:linear-gradient(180deg,rgba(17,15,26,.6),rgba(7,6,11,.9))}
+.viewport canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+.viewport canvas:active{cursor:grabbing}
+.vp-hud{position:absolute;z-index:2;font:400 .8125rem/1.6 var(--mono);text-transform:uppercase;letter-spacing:.05em;pointer-events:none}
+.vp-hud.stats{top:18px;left:22px;color:var(--cyan);background:rgba(7,6,11,.7);padding:10px 14px;box-shadow:inset 2px 0 0 var(--cyan)}
+.vp-hud.stats b{font-weight:400;color:var(--ice)}
+.vp-hud.tip{right:22px;bottom:18px;color:var(--dim);text-align:right}
+.modes{position:absolute;z-index:3;top:18px;right:22px;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;max-width:70%}
+.mode{font:400 .8125rem var(--mono);text-transform:uppercase;color:var(--cyan);background:rgba(7,6,11,.75);padding:8px 12px;box-shadow:inset 0 0 0 1px var(--line)}
+.mode:hover{box-shadow:inset 0 0 0 1px var(--cyan)}
+.mode[aria-pressed="true"]{background:var(--cyan);color:var(--void);box-shadow:none}
+.loading{position:absolute;inset:0;z-index:4;display:grid;place-items:center;align-content:center;gap:14px;font:400 .875rem var(--mono);color:var(--cyan);text-transform:uppercase;
+  background:rgba(7,6,11,.85);transition:opacity .4s}
+.loading.done{opacity:0;pointer-events:none}
+.loading .meter{width:min(320px,60vw);height:2px;background:rgba(5,217,232,.15)}
+.loading .meter b{display:block;height:100%;width:0;background:var(--pink);box-shadow:0 0 10px var(--pink)}
+.loading .btn{pointer-events:auto}
+
 /* ---------- boot sequence ---------- */
 .boot{position:fixed;inset:0;z-index:80;background:var(--void);display:flex;flex-direction:column;justify-content:flex-end;
   padding:var(--gutter);font:400 clamp(.8rem,1.3vw,.95rem)/1.8 var(--mono);color:var(--cyan);transition:opacity .5s,visibility .5s}
@@ -268,6 +292,9 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
   .shot::before{background:linear-gradient(0deg, rgba(7,6,11,.95) 0%, rgba(7,6,11,.3) 55%, rgba(7,6,11,0) 75%)}
   .slate{left:var(--gutter);right:var(--gutter);bottom:32px;max-width:none}
   .sheet{grid-template-columns:1fr}
+  .modes{top:auto;bottom:14px;left:14px;right:14px;max-width:none;justify-content:center}
+  .vp-hud.tip{display:none}
+  .vp-hud.stats{top:12px;left:12px;font-size:.6875rem;padding:6px 10px}
   .v .nav{top:auto;bottom:6px;transform:none}
 }
 @media (prefers-reduced-motion:reduce){
@@ -292,6 +319,7 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
   <nav aria-label="Main">
     <span class="status">Available for hire</span>
     <a href="#reel">Work</a>
+    <a href="#model">3D</a>
     <a href="#credits">About</a>
     <a href="#contact">Contact</a>
   </nav>
@@ -323,6 +351,29 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
     <div class="track"></div>
     <div class="playhead" aria-hidden="true"><b></b></div>
     <nav class="timeline" aria-label="Jump to a project"></nav>
+  </div>
+</section>
+
+<section class="model" id="model" aria-labelledby="model-h">
+  <div class="head">
+    <div>
+      <h2 id="model-h" class="page-h"><span class="mono">// live model</span>Porsche 911, in your browser</h2>
+      <p class="lede">The real production mesh and Substance Painter textures. Drag to orbit, scroll or pinch to zoom, and switch views to see how it's built.</p>
+    </div>
+  </div>
+  <div class="viewport" id="viewport">
+    <div class="vp-hud stats" aria-hidden="true">
+      Tris <b id="st-tris">241,048</b><br>Materials <b>23</b><br>Textures <b>PBR, Substance Painter</b><br>Mode <b id="st-mode">Textured</b>
+    </div>
+    <div class="modes" role="group" aria-label="View mode">
+      <button class="mode" data-mode="textured" aria-pressed="true">Textured</button>
+      <button class="mode" data-mode="clay" aria-pressed="false">Clay</button>
+      <button class="mode" data-mode="wire" aria-pressed="false">Wireframe</button>
+      <button class="mode" id="spin" aria-pressed="true">Turntable</button>
+      <button class="mode" id="reset" aria-pressed="false">Reset view</button>
+    </div>
+    <div class="vp-hud tip" aria-hidden="true">Drag to orbit · Scroll to zoom · Right-drag to pan</div>
+    <div class="loading" id="vp-loading"><span id="vp-label">Model loads when you reach it</span><div class="meter"><b id="vp-meter"></b></div></div>
   </div>
 </section>
 
@@ -362,6 +413,7 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
     <button class="chip" data-cmd="help">help</button>
     <button class="chip" data-cmd="projects">projects</button>
     <button class="chip" data-cmd="open 1">open 1</button>
+    <button class="chip" data-cmd="wireframe">wireframe</button>
     <button class="chip" data-cmd="skills">skills</button>
     <button class="chip" data-cmd="hire">hire</button>
   </div>
@@ -409,7 +461,7 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
       frames:[1,2,3,4,5,6].map(n=>'gujarat-university-campus-walkthrough-'+n+'.jpg') },
     { title:'Porsche 911 Study', sector:'Vehicle', tools:'Cinematic lighting',
       line:'A vehicle study about cinematic lighting: fog, sodium lamps and headlight bloom.',
-      cover:'porsche-911-study-1.jpg', frames:['porsche-911-study-1.jpg','porsche-911-study-2.jpg'] },
+      model:true, cover:'porsche-911-study-1.jpg', frames:['porsche-911-study-1.jpg','porsche-911-study-2.jpg'] },
     { title:'Samurai Armor', sector:'Character', tools:'Hard surface',
       line:'Hard-surface character armor and katana, lit low and cold.',
       cover:'sci-fi-armor-suit-2.jpg', frames:['sci-fi-armor-suit-2.jpg','sci-fi-armor-suit-1.jpg','samurai-1.jpg'] },
@@ -479,7 +531,7 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
         <h2 data-text="${esc(s.title)}">${esc(s.title)}</h2>
         <p>${esc(s.line)}</p>
         ${s.award ? `<div class="award">${s.award}</div>` : ''}
-        <div class="frames"><button class="btn" data-i="${i}">Open ${count} ${count === 1 ? 'file' : 'files'}</button></div>
+        <div class="frames"><button class="btn" data-i="${i}">Open ${count} ${count === 1 ? 'file' : 'files'}</button>${s.model ? ' <a class="btn ghost" href="#model">Spin it in 3D</a>' : ''}</div>
       </div>`;
     track.appendChild(art);
     const t = document.createElement('a');
@@ -715,6 +767,7 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
     if (TEXT[name]) line(TEXT[name]);
     else if (name === 'help') line(
       '<em>projects</em> list the work&nbsp;&nbsp; <em>open &lt;number or name&gt;</em> view a project<br>' +
+      '<em>model</em> jump to the 3D Porsche&nbsp;&nbsp; <em>wireframe</em> <em>clay</em> <em>textured</em><br>' +
       '<em>whoami</em> <em>skills</em> <em>tools</em> <em>shipped</em> <em>awards</em> <em>education</em> <em>about</em><br>' +
       '<em>socials</em> <em>contact</em> <em>hire</em> <em>clear</em><br>There may be a few hidden ones.');
     else if (name === 'projects') line(SHOTS.map((s, i) => `${pad(i+1)}&nbsp; ${esc(s.title)}`).join('<br>') + '<br>Type <em>open 3</em> or <em>open porsche</em>.');
@@ -724,6 +777,8 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
       if (hit) { line('Opening ' + esc(hit.title) + '…'); setTimeout(() => openViewer(hit), 250); }
       else line('No project matches "' + esc(arg) + '". Type <em>projects</em> for the list.', 'err');
     }
+    else if (name === 'model' || name === 'spin' || name === '3d') { line('Jumping to the live Porsche model. Try <em>wireframe</em> or <em>clay</em>.'); document.getElementById('model').scrollIntoView({ behavior: calm ? 'auto' : 'smooth' }); }
+    else if (name === 'wireframe' || name === 'wire' || name === 'clay' || name === 'textured') { const md = name.startsWith('wire') ? 'wire' : name; dispatchEvent(new CustomEvent('model:mode', { detail: md })); line('Model view set to ' + md + '.'); document.getElementById('model').scrollIntoView({ behavior: calm ? 'auto' : 'smooth' }); }
     else if (name === 'hire') line('Good call. Reach Havya at ' + mail + '. Available for full-time, freelance and remote roles in game art, VFX and archviz.');
     else if (name === 'ls') line('renders/&nbsp; tools/&nbsp; shipped.log&nbsp; awards.log&nbsp; education.txt&nbsp; about.md');
     else if (name === 'clear') termLog.innerHTML = '';
@@ -758,6 +813,146 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
     if (ki === KONAMI.length) { ki = 0; toggleOverdrive(); }
   });
 })();
+</script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+const vp = document.getElementById('viewport');
+const label = document.getElementById('vp-label'), meter = document.getElementById('vp-meter'), loading = document.getElementById('vp-loading');
+const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let pending = null;
+addEventListener('model:mode', e => { pending = e.detail; if (window.__setMode) window.__setMode(e.detail); });
+
+async function start(){
+  label.textContent = 'Decrypting mesh…';
+  let THREE, GLTFLoader, OrbitControls, RoomEnvironment, MeshoptDecoder;
+  try {
+    THREE = await import('three');
+    ({ GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js'));
+    ({ OrbitControls } = await import('three/addons/controls/OrbitControls.js'));
+    ({ RoomEnvironment } = await import('three/addons/environments/RoomEnvironment.js'));
+    ({ MeshoptDecoder } = await import('three/addons/libs/meshopt_decoder.module.js'));
+  } catch (e) { label.textContent = 'Could not load the 3D viewer. Check your connection and refresh.'; return; }
+
+  const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, powerPreference:'high-performance' });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  vp.prepend(renderer.domElement);
+  renderer.domElement.setAttribute('aria-label', '3D model of a Porsche 911. Drag to rotate, scroll to zoom.');
+  renderer.domElement.setAttribute('role', 'img');
+
+  const scene = new THREE.Scene();
+  let visible = true, needs = true;
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  scene.environmentIntensity = 0.9;
+
+  const camera = new THREE.PerspectiveCamera(32, 1, 0.05, 100);
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true; controls.dampingFactor = .08;
+  controls.minDistance = 3.2; controls.maxDistance = 16; controls.maxPolarAngle = Math.PI * 0.495;
+  controls.autoRotate = !calm; controls.autoRotateSpeed = 0.8;
+
+  // neon rig: cool key, pink and cyan rims
+  const key = new THREE.DirectionalLight(0xffffff, 1.6); key.position.set(4, 7, 5); key.castShadow = true;
+  key.shadow.mapSize.set(1024, 1024); Object.assign(key.shadow.camera, { left:-4, right:4, top:4, bottom:-4, near:1, far:20 }); key.shadow.bias = -0.0005;
+  const pink = new THREE.DirectionalLight(0xff2a6d, 2.2); pink.position.set(-6, 2, -3);
+  const cyan = new THREE.DirectionalLight(0x05d9e8, 2.0); cyan.position.set(6, 1.5, -5);
+  scene.add(key, pink, cyan, new THREE.HemisphereLight(0x8fa8ff, 0x0b0710, 0.35));
+
+  // floor: shadow catcher plus a neon grid
+  const shadow = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.ShadowMaterial({ opacity:.55 }));
+  shadow.rotation.x = -Math.PI / 2; shadow.receiveShadow = true; scene.add(shadow);
+  const grid = new THREE.GridHelper(24, 48, 0xff2a6d, 0x05d9e8);
+  grid.material.transparent = true; grid.material.opacity = .22; grid.position.y = 0.001; scene.add(grid);
+
+  const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
+  let gltf;
+  try {
+    gltf = await loader.loadAsync('../assets/models/porsche-911.glb', ev => {
+      if (ev.total) { const p = ev.loaded / ev.total; meter.style.width = (p * 100) + '%'; label.textContent = 'Loading model ' + Math.round(p * 100) + '%'; }
+    });
+  } catch (e) { label.textContent = 'The model failed to load. Refresh to try again.'; return; }
+
+  const car = gltf.scene;
+  const box = new THREE.Box3().setFromObject(car), size = box.getSize(new THREE.Vector3()), center = box.getCenter(new THREE.Vector3());
+  car.position.sub(new THREE.Vector3(center.x, box.min.y, center.z));
+  scene.add(car);
+
+  // remember each mesh's real materials so view modes can swap them
+  const meshes = []; let tris = 0;
+  car.traverse(o => {
+    if (!o.isMesh) return;
+    o.castShadow = true; o.receiveShadow = true;
+    o.userData.orig = o.material; meshes.push(o);
+    tris += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3;
+  });
+  document.getElementById('st-tris').textContent = Math.round(tris).toLocaleString('en-US');
+  const isGlass = m => m.name === 'M_glass';
+  const clay = new THREE.MeshStandardMaterial({ color:0x7d838d, roughness:.72, metalness:0, envMapIntensity:.45 });
+  const clayGlass = new THREE.MeshStandardMaterial({ color:0x9aa3b0, roughness:.1, transparent:true, opacity:.35 });
+  const wire = new THREE.MeshBasicMaterial({ color:0x05d9e8, wireframe:true, transparent:true, opacity:.55 });
+  const wireFill = new THREE.MeshBasicMaterial({ color:0x07060b, polygonOffset:true, polygonOffsetFactor:1, polygonOffsetUnits:1 });
+  const wireOverlay = []; // second pass of wire lines over a dark fill
+  meshes.forEach(m => { const w = new THREE.Mesh(m.geometry, wire); w.visible = false; m.add(w); wireOverlay.push(w); });
+
+  const statMode = document.getElementById('st-mode');
+  const buttons = [...vp.querySelectorAll('.mode[data-mode]')];
+  function setMode(mode){
+    meshes.forEach(m => {
+      const o = m.userData.orig;
+      m.material = mode === 'clay' ? (isGlass(o) ? clayGlass : clay) : mode === 'wire' ? wireFill : o;
+      m.castShadow = mode !== 'wire';
+    });
+    wireOverlay.forEach(w => w.visible = mode === 'wire');
+    grid.material.opacity = mode === 'wire' ? .4 : .22;
+    buttons.forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === mode ? 'true' : 'false'));
+    statMode.textContent = { textured:'Textured', clay:'Clay', wire:'Wireframe' }[mode];
+    needs = true;
+  }
+  window.__setMode = setMode;
+  buttons.forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+
+  const spinBtn = document.getElementById('spin');
+  spinBtn.setAttribute('aria-pressed', String(controls.autoRotate));
+  spinBtn.addEventListener('click', () => { controls.autoRotate = !controls.autoRotate; spinBtn.setAttribute('aria-pressed', String(controls.autoRotate)); });
+  const home = () => {
+    const d = Math.max(size.x, size.z) * 1.22 * Math.max(1, 1.25 / camera.aspect);
+    camera.position.set(d * .62, size.y * 1.05, d * .78); controls.target.set(0, size.y * .38, 0); controls.update();
+  };
+  document.getElementById('reset').addEventListener('click', home);
+  let touched = false;
+
+  // pause the turntable while someone is handling the model, resume after a moment
+  let idle; controls.addEventListener('start', () => { touched = true; clearTimeout(idle); controls.autoRotate = false; });
+  controls.addEventListener('end', () => { clearTimeout(idle); if (spinBtn.getAttribute('aria-pressed') === 'true' && !calm) idle = setTimeout(() => controls.autoRotate = true, 3500); });
+
+  function resize(){ const w = vp.clientWidth, h = vp.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); if (!touched) home(); needs = true; }
+  new ResizeObserver(resize).observe(vp); resize();
+
+  // only render while the viewer is on screen
+  new IntersectionObserver(es => { visible = es[0].isIntersecting; }, { threshold:0 }).observe(vp);
+  controls.addEventListener('change', () => needs = true);
+  renderer.setAnimationLoop(() => {
+    if (!visible) return;
+    const moved = controls.update();
+    if (moved || needs || controls.autoRotate) { renderer.render(scene, camera); needs = false; }
+  });
+  if (pending) setMode(pending);
+  loading.classList.add('done');
+  window.__modelReady = true;
+}
+
+// load the model only when the visitor gets near it
+let started = false;
+const go = () => { if (!started) { started = true; start(); } };
+new IntersectionObserver(es => { if (es[0].isIntersecting) go(); }, { rootMargin:'600px 0px' }).observe(vp);
+addEventListener('model:mode', go);
 </script>
 </body>
 </html>
