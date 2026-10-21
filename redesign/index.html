@@ -202,6 +202,58 @@ dialog::backdrop{background:#000}
 .v .thumbs .play{position:absolute;inset:0;display:grid;place-items:center;font:400 .75rem var(--mono);color:var(--cyan)}
 
 /* ---------- small screens ---------- */
+/* ---------- boot sequence ---------- */
+.boot{position:fixed;inset:0;z-index:80;background:var(--void);display:flex;flex-direction:column;justify-content:flex-end;
+  padding:var(--gutter);font:400 clamp(.8rem,1.3vw,.95rem)/1.8 var(--mono);color:var(--cyan);transition:opacity .5s,visibility .5s}
+.boot.gone{opacity:0;visibility:hidden}
+.boot .ok{color:var(--volt)}
+.boot .skiphint{position:absolute;top:var(--gutter);right:var(--gutter);color:var(--dim);text-transform:uppercase}
+.boot .meter{height:2px;max-width:420px;margin-top:16px;background:rgba(5,217,232,.15)}
+.boot .meter b{display:block;height:100%;width:0;background:var(--pink);box-shadow:0 0 10px var(--pink);transition:width .15s}
+html.booting{overflow:hidden}
+
+/* ---------- targeting reticle ---------- */
+.reticle{position:fixed;left:0;top:0;z-index:70;width:34px;height:34px;margin:-17px 0 0 -17px;pointer-events:none;opacity:0;
+  border:1px solid var(--cyan);border-radius:50%;transition:width .18s,height .18s,margin .18s,border-radius .18s,border-color .18s,opacity .2s}
+.reticle::after{content:"";position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px;background:var(--pink)}
+.reticle.lock{width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:0;border-color:var(--pink);box-shadow:0 0 14px rgba(255,42,109,.5)}
+
+/* ---------- scan lens ---------- */
+.lens{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;transition:opacity .2s;
+  clip-path:circle(120px at var(--x,50%) var(--y,50%))}
+.lens img{filter:grayscale(1) invert(1) contrast(2.2) brightness(1.05)}
+.lens::before{content:"";position:absolute;inset:0;z-index:1;background:var(--cyan);mix-blend-mode:multiply;opacity:.35}
+.lens::after{content:"";position:absolute;inset:0;z-index:2;mix-blend-mode:screen;background:
+  linear-gradient(rgba(5,217,232,.4) 1px,transparent 1px) 0 0/100% 18px,
+  linear-gradient(90deg,rgba(5,217,232,.4) 1px,transparent 1px) 0 0/18px 100%}
+.ring{position:absolute;z-index:2;left:var(--x,50%);top:var(--y,50%);width:240px;height:240px;margin:-120px 0 0 -120px;pointer-events:none;opacity:0;
+  border:1px solid var(--cyan);border-radius:50%;box-shadow:0 0 24px rgba(5,217,232,.45),inset 0 0 24px rgba(5,217,232,.25);transition:opacity .2s}
+.ring span{position:absolute;left:50%;top:-24px;transform:translateX(-50%);white-space:nowrap;font:400 .75rem var(--mono);color:var(--cyan);text-transform:uppercase;background:rgba(7,6,11,.8);padding:2px 8px}
+.shot.scanning .lens,.shot.scanning .ring{opacity:1}
+.readout .hint{color:var(--volt)}
+
+/* ---------- live terminal ---------- */
+.term .body{max-height:min(70vh,620px);overflow:auto;scrollbar-color:var(--cyan) transparent}
+.term .out a{color:var(--cyan)}
+.term .err{color:var(--pink);padding-left:2ch}
+.term form{display:flex;align-items:center;margin-top:20px;padding-bottom:4px;box-shadow:inset 0 -1px 0 var(--line)}
+.term form:focus-within{box-shadow:inset 0 -1px 0 var(--volt)}
+.term form label{color:var(--cyan);white-space:pre}
+.term input{flex:1;min-width:0;background:transparent;border:0;outline:0;color:var(--pink);font:inherit;caret-color:var(--volt)}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;max-width:960px}
+.chip{font:400 .8125rem var(--mono);color:var(--cyan);padding:7px 12px;box-shadow:inset 0 0 0 1px var(--line)}
+.chip:hover{box-shadow:inset 0 0 0 1px var(--cyan);color:var(--ice)}
+.chip::before{content:"$ ";color:var(--pink)}
+
+/* ---------- overdrive easter egg ---------- */
+html.overdrive{filter:hue-rotate(150deg) saturate(1.5)}
+html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:.7s}
+.toast{position:fixed;left:50%;bottom:28px;z-index:75;transform:translate(-50%,12px);opacity:0;pointer-events:none;padding:10px 20px;
+  background:var(--volt);color:var(--void);font:600 .875rem var(--display);letter-spacing:.1em;text-transform:uppercase;
+  clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);transition:opacity .25s,transform .25s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.open video,.open .poster,.title{transition:transform .25s ease-out}
+
 @media (max-width:760px){
   html{scroll-snap-type:none}
   .top .status{display:none}
@@ -226,6 +278,13 @@ dialog::backdrop{background:#000}
 </style>
 </head>
 <body>
+<div class="boot" id="boot" aria-hidden="true">
+  <div class="skiphint">Press any key to skip</div>
+  <div id="boot-lines"></div>
+  <div class="meter"><b id="boot-meter"></b></div>
+</div>
+<div class="reticle" id="reticle" aria-hidden="true"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 <a class="skip" href="#reel">Skip to the work</a>
 
 <header class="top">
@@ -291,8 +350,20 @@ dialog::backdrop{background:#000}
       <div class="cmd">cat education.txt</div>
       <div class="out">M.Sc. Animation, Gujarat University, 2024–2026<br>B.Sc. Animation, Gujarat University, 2021–2024, CGPA 9.0/10</div>
       <div class="cmd">cat about.md</div>
-      <div class="out">Four years of game-ready assets, photoreal product renders and architectural walkthroughs for coursework, freelance clients and a published game. Currently going deep on real-time rendering with Lumen and Nanite in Unreal Engine 5.<span class="caret" aria-hidden="true"></span></div>
+      <div class="out">Four years of game-ready assets, photoreal product renders and architectural walkthroughs for coursework, freelance clients and a published game. Currently going deep on real-time rendering with Lumen and Nanite in Unreal Engine 5.</div>
+      <div id="term-log" aria-live="polite"><div class="out" style="margin-top:18px;color:var(--volt)">This terminal is live. Type <em>help</em> to see what you can ask, or tap a command below.</div></div>
+      <form id="term-form" autocomplete="off">
+        <label for="term-in">havya@ahmedabad:~$ </label>
+        <input id="term-in" spellcheck="false" autocapitalize="off" aria-label="Type a command, for example help">
+      </form>
     </div>
+  </div>
+  <div class="chips" aria-label="Quick commands">
+    <button class="chip" data-cmd="help">help</button>
+    <button class="chip" data-cmd="projects">projects</button>
+    <button class="chip" data-cmd="open 1">open 1</button>
+    <button class="chip" data-cmd="skills">skills</button>
+    <button class="chip" data-cmd="hire">hire</button>
   </div>
 </section>
 
@@ -306,7 +377,7 @@ dialog::backdrop{background:#000}
     <a class="btn ghost" href="https://youtube.com/@havyapandya3072" target="_blank" rel="noopener">YouTube</a>
     <a class="btn ghost" href="https://play.google.com/store/apps/details?id=com.shinigamistudios.colordrop" target="_blank" rel="noopener">Color Drop</a>
   </div>
-  <div class="foot"><span>© 2026 Havya Pandya</span><span>All renders by Havya Pandya</span></div>
+  <div class="foot"><span>© 2026 Havya Pandya</span><span title="Try it on a keyboard">↑↑↓↓←→←→BA</span><span>All renders by Havya Pandya</span></div>
 </section>
 </main>
 
@@ -368,6 +439,7 @@ dialog::backdrop{background:#000}
   const pad = k => String(k).padStart(2,'0');
   const n = SHOTS.length;
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fine = matchMedia('(pointer: fine)').matches;
 
   // decrypt effect: characters resolve from noise into the real title
   const GLYPHS = '!<>-_\\/[]{}=+*^?#01アイウエオカキクケコ';
@@ -401,7 +473,7 @@ dialog::backdrop{background:#000}
       <img src="${A(s.cover)}" alt="${esc(s.title)} render" ${i > 1 ? 'loading="lazy"' : ''}>
       <button class="hit" aria-label="Open ${esc(s.title)}, ${count} files" data-i="${i}"></button>
       <div class="frame-hud" aria-hidden="true"></div>
-      <div class="readout" aria-hidden="true"><span class="rec">Rec</span><br>Sector: ${esc(s.sector)}<br>${esc(s.tools)}<br>Files: ${pad(count)}</div>
+      <div class="readout" aria-hidden="true"><span class="rec">Rec</span><br>Sector: ${esc(s.sector)}<br>${esc(s.tools)}<br>Files: ${pad(count)}${fine ? '<br><span class="hint">Hover to scan</span>' : ''}</div>
       <div class="slate">
         <div class="no">File ${pad(i+1)} / ${pad(n)}</div>
         <h2 data-text="${esc(s.title)}">${esc(s.title)}</h2>
@@ -525,6 +597,165 @@ dialog::backdrop{background:#000}
   viewer.addEventListener('keydown', e => {
     if (e.key === 'ArrowRight') show(at + 1);
     if (e.key === 'ArrowLeft') show(at - 1);
+  });
+  // ===== interactive layer =====
+  const root = document.documentElement;
+
+  // boot sequence, once per browser session
+  const boot = document.getElementById('boot');
+  let booted = false;
+  try { booted = sessionStorage.getItem('booted') === '1'; } catch (e) {}
+  if (calm || booted) boot.remove();
+  else {
+    root.classList.add('booting');
+    const BOOT = [
+      ['> BOOT havya.os v2.0', ''],
+      ['> Mounting /renders .............. 32 files', ''],
+      ['> Compiling Unreal Engine 5 shaders ...... OK', 'ok'],
+      ['> Calibrating Lumen global illumination .. OK', 'ok'],
+      ['> Decrypting portfolio ................... OK', 'ok'],
+      ['> Access granted. Welcome, visitor.', 'ok'],
+    ];
+    const linesEl = document.getElementById('boot-lines'), meter = document.getElementById('boot-meter');
+    let li = 0, timer;
+    const finish = () => {
+      clearTimeout(timer);
+      boot.classList.add('gone'); root.classList.remove('booting');
+      try { sessionStorage.setItem('booted', '1'); } catch (e) {}
+      ['keydown','pointerdown'].forEach(ev => removeEventListener(ev, finish));
+      setTimeout(() => boot.remove(), 600);
+    };
+    const step = () => {
+      if (li < BOOT.length) {
+        const d = document.createElement('div');
+        d.textContent = BOOT[li][0]; d.className = BOOT[li][1];
+        linesEl.appendChild(d); li++;
+        meter.style.width = (li / BOOT.length * 100) + '%';
+        timer = setTimeout(step, li === BOOT.length ? 650 : 260);
+      } else finish();
+    };
+    step();
+    ['keydown','pointerdown'].forEach(ev => addEventListener(ev, finish));
+  }
+
+  // toast
+  const toastEl = document.getElementById('toast'); let toastT;
+  function toast(msg){ toastEl.textContent = msg; toastEl.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove('show'), 2200); }
+
+  if (fine && !calm) {
+    // targeting reticle
+    const ret = document.getElementById('reticle');
+    addEventListener('mousemove', e => {
+      ret.style.transform = `translate3d(${e.clientX}px,${e.clientY}px,0)`;
+      ret.style.opacity = 1;
+      ret.classList.toggle('lock', !!e.target.closest('a, button:not(.hit), input, .chip'));
+    }, { passive:true });
+    document.addEventListener('mouseleave', () => ret.style.opacity = 0);
+
+    // hero parallax
+    const open = document.querySelector('.open');
+    const media = open.querySelectorAll('video, .poster');
+    const title = open.querySelector('.title');
+    open.addEventListener('mousemove', e => {
+      const px = e.clientX / innerWidth - .5, py = e.clientY / innerHeight - .5;
+      media.forEach(m => m.style.transform = `scale(1.06) translate(${-px * 18}px, ${-py * 12}px)`);
+      title.style.transform = `translate(${px * 12}px, ${py * 8}px)`;
+    });
+    open.addEventListener('mouseleave', () => { media.forEach(m => m.style.transform = ''); title.style.transform = ''; });
+  }
+
+  if (fine) {
+    // scan lens over each project render
+    shots.forEach(s => {
+      const lens = document.createElement('div'); lens.className = 'lens'; lens.setAttribute('aria-hidden', 'true');
+      const img = s.querySelector('img').cloneNode(); img.alt = ''; img.removeAttribute('loading');
+      lens.appendChild(img);
+      const ring = document.createElement('div'); ring.className = 'ring'; ring.setAttribute('aria-hidden', 'true');
+      const label = document.createElement('span'); ring.appendChild(label);
+      s.querySelector('.hit').after(lens, ring);
+      s.addEventListener('mousemove', e => {
+        if (e.target.closest('.slate')) { s.classList.remove('scanning'); return; }
+        const r = s.getBoundingClientRect();
+        const x = Math.round(e.clientX - r.left), y = Math.round(e.clientY - r.top);
+        s.style.setProperty('--x', x + 'px'); s.style.setProperty('--y', y + 'px');
+        label.textContent = `Scan  X:${String(x).padStart(4,'0')}  Y:${String(y).padStart(4,'0')}`;
+        s.classList.add('scanning');
+      });
+      s.addEventListener('mouseleave', () => s.classList.remove('scanning'));
+    });
+  }
+
+  // live terminal
+  const termLog = document.getElementById('term-log');
+  const termBody = termLog.parentElement;
+  const termForm = document.getElementById('term-form');
+  const termIn = document.getElementById('term-in');
+  const EMAIL = 'havyapandya4@gmail.com';
+  const mail = `<a href="mailto:${EMAIL}">${EMAIL}</a>`;
+  const ALL = SHOTS.concat(OUTTAKES);
+  const line = (html, cls = 'out') => { const d = document.createElement('div'); d.className = cls; d.innerHTML = html; termLog.appendChild(d); };
+  const TEXT = {
+    whoami: 'Havya Pandya. 3D artist, Ahmedabad, Gujarat, India.',
+    skills: 'Modeling, PBR texturing, UV unwrapping, lighting, rendering',
+    tools: 'Blender / Maya / 3ds Max / ZBrush / Substance Painter / Marmoset Toolbag / Unreal Engine 5 / Unity',
+    shipped: '<em>Color Drop</em>, Android, Google Play. Sole 3D artist. <a href="https://play.google.com/store/apps/details?id=com.shinigamistudios.colordrop" target="_blank" rel="noopener">Open on Google Play</a>',
+    awards: '<em>Best Project Award</em>, Gujarat University campus walkthrough. Type <em>open campus</em> to see it.',
+    education: 'M.Sc. Animation, Gujarat University, 2024–2026<br>B.Sc. Animation, Gujarat University, 2021–2024, CGPA 9.0/10',
+    about: 'Four years of game-ready assets, photoreal product renders and architectural walkthroughs. Currently going deep on Lumen and Nanite in Unreal Engine 5.',
+    socials: '<a href="https://www.artstation.com/havyapandya5" target="_blank" rel="noopener">ArtStation</a>  <a href="https://linkedin.com/in/havyapandya" target="_blank" rel="noopener">LinkedIn</a>  <a href="https://youtube.com/@havyapandya3072" target="_blank" rel="noopener">YouTube</a>',
+    contact: 'Email ' + mail + '. Open to full-time, freelance and remote work.',
+  };
+  const ALIAS = { 'skills.txt':'skills', '~/tools':'tools', 'shipped.log':'shipped', 'awards.log':'awards', 'education.txt':'education', 'about.md':'about', links:'socials', email:'contact', resume:'education' };
+  function run(raw){
+    const cmd = raw.trim(); if (!cmd) return;
+    const cl = document.createElement('div'); cl.className = 'cmd'; cl.textContent = cmd; termLog.appendChild(cl);
+    let [name, ...rest] = cmd.toLowerCase().split(/\s+/); const arg = rest.join(' ');
+    if (name === 'cat' || name === 'ls' && arg) { name = ALIAS[arg] || arg; }
+    name = ALIAS[name] || name;
+    if (TEXT[name]) line(TEXT[name]);
+    else if (name === 'help') line(
+      '<em>projects</em> list the work&nbsp;&nbsp; <em>open &lt;number or name&gt;</em> view a project<br>' +
+      '<em>whoami</em> <em>skills</em> <em>tools</em> <em>shipped</em> <em>awards</em> <em>education</em> <em>about</em><br>' +
+      '<em>socials</em> <em>contact</em> <em>hire</em> <em>clear</em><br>There may be a few hidden ones.');
+    else if (name === 'projects') line(SHOTS.map((s, i) => `${pad(i+1)}&nbsp; ${esc(s.title)}`).join('<br>') + '<br>Type <em>open 3</em> or <em>open porsche</em>.');
+    else if (name === 'open' || name === 'view') {
+      const k = parseInt(arg, 10);
+      const hit = arg ? (k >= 1 && k <= SHOTS.length ? SHOTS[k-1] : ALL.find(s => s.title.toLowerCase().includes(arg))) : null;
+      if (hit) { line('Opening ' + esc(hit.title) + '…'); setTimeout(() => openViewer(hit), 250); }
+      else line('No project matches "' + esc(arg) + '". Type <em>projects</em> for the list.', 'err');
+    }
+    else if (name === 'hire') line('Good call. Reach Havya at ' + mail + '. Available for full-time, freelance and remote roles in game art, VFX and archviz.');
+    else if (name === 'ls') line('renders/&nbsp; tools/&nbsp; shipped.log&nbsp; awards.log&nbsp; education.txt&nbsp; about.md');
+    else if (name === 'clear') termLog.innerHTML = '';
+    else if (name === 'date') line(esc(new Date().toString()));
+    else if (name === 'sudo') line('Permission denied. Root access is reserved for recruiters. Try <em>hire</em>.', 'err');
+    else if (name === 'overdrive' || name === 'glitch') toggleOverdrive();
+    else if (name === 'rm') line('Nice try. These renders took weeks.', 'err');
+    else if (name === 'hello' || name === 'hi') line('Hey. Type <em>help</em> to look around.');
+    else line('command not found: ' + esc(name) + '. Type <em>help</em>.', 'err');
+    termBody.scrollTop = termBody.scrollHeight;
+  }
+  const hist = []; let hp = 0;
+  termForm.addEventListener('submit', e => { e.preventDefault(); const v = termIn.value; if (v.trim()) { hist.push(v); hp = hist.length; } run(v); termIn.value = ''; });
+  termIn.addEventListener('keydown', e => {
+    if (e.key === 'ArrowUp' && hp > 0) { e.preventDefault(); termIn.value = hist[--hp]; }
+    if (e.key === 'ArrowDown') { e.preventDefault(); hp = Math.min(hist.length, hp + 1); termIn.value = hist[hp] || ''; }
+  });
+  document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => run(c.dataset.cmd)));
+
+  // easter egg: the Konami code toggles overdrive
+  function toggleOverdrive(){
+    const on = root.classList.toggle('overdrive');
+    toast(on ? 'Overdrive enabled' : 'Overdrive off');
+    if (termLog) line(on ? 'Overdrive enabled. Type <em>overdrive</em> again to cool down.' : 'Overdrive off.');
+  }
+  const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+  let ki = 0;
+  addEventListener('keydown', e => {
+    if (e.target.matches('input, textarea')) return;
+    const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    ki = key === KONAMI[ki] ? ki + 1 : (key === KONAMI[0] ? 1 : 0);
+    if (ki === KONAMI.length) { ki = 0; toggleOverdrive(); }
   });
 })();
 </script>
