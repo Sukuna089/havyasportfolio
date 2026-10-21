@@ -877,7 +877,7 @@ async function start(){
   const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
   let gltf;
   try {
-    gltf = await loader.loadAsync('../assets/models/porsche-911.glb', ev => {
+    gltf = await loader.loadAsync('../assets/models/porsche-911.glb?v=2', ev => {
       const mb = (ev.loaded / 1048576).toFixed(1);
       const p = Math.min(1, ev.loaded / 3723824);
       meter.style.width = (p * 100) + '%'; label.textContent = 'Loading model ' + mb + ' MB';
