@@ -1,738 +1,999 @@
-<!DOCTYPE html>
-<!--
-  ============================================================
-  3D PORTFOLIO — customization guide
-  ============================================================
-  1. Your name / role      → search for "YOUR NAME" and "Your Role"
-  2. Bio text              → search for "BIO_TEXT"
-  3. Tools chips           → edit the .chip list in the About section
-  4. Contact links         → search for "EMAIL_ADDRESS" / social hrefs
-  5. Project cards         → each .work-card has a data-title/data-tag
-                             and a placeholder tile. Swap the tile's
-                             background-image (or drop an <img>) for
-                             your own renders. There are 6 slots, add
-                             more by copying a .work-card block.
-  6. Hero 3D model         → currently a procedural faceted gem
-                             (Three.js IcosahedronGeometry). Swap for
-                             your own .glb model by loading it with
-                             THREE.GLTFLoader instead of the geometry
-                             block marked "HERO MODEL" below.
-  ============================================================
--->
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Havya Pandya — 3D Artist Portfolio</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Havya Pandya // 3D Artist</title>
+<meta name="description" content="Havya Pandya is a 3D artist in Ahmedabad, India, making game-ready assets, product visualizations and architectural walkthroughs in Blender, Maya and Unreal Engine 5.">
+<meta property="og:title" content="Havya Pandya // 3D Artist">
+<meta property="og:description" content="Game art, product visualization and architectural walkthroughs.">
+<meta property="og:image" content="https://sukuna089.github.io/havyasportfolio/assets/unreal-engine-environments-2.jpg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#07060B">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Share+Tech+Mono&family=Turret+Road:wght@700;800&display=swap">
 <style>
-  :root{
-    --bg-void:#15161a;
-    --bg-panel:#1e2024;
-    --bg-panel-hi:#26282e;
-    --ink:#eef0ef;
-    --ink-dim:#8b8d96;
-    --axis-blue:#4d8dff;
-    --axis-amber:#ffb454;
-    --grid-line:rgba(255,255,255,0.055);
-    --radius:2px;
-  }
-  *{margin:0;padding:0;box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
-  body{
-    background:var(--bg-void);
-    color:var(--ink);
-    font-family:'Inter',sans-serif;
-    overflow-x:hidden;
-  }
-  ::selection{ background:var(--axis-blue); color:#0a0a0c; }
+:root{
+  --void:#07060B;
+  --panel:#110F1A;
+  --ice:#D1F7FF;
+  --dim:#7C8AA5;
+  --pink:#FF2A6D;
+  --cyan:#05D9E8;
+  --volt:#F9F002;
+  --line:rgba(5,217,232,.25);
+  --display:"Chakra Petch", "Arial Narrow", sans-serif;
+  --name:"Turret Road", "Chakra Petch", sans-serif;
+  --mono:"Share Tech Mono", ui-monospace, Menlo, monospace;
+  --gutter:clamp(16px, 4vw, 56px);
+  --cut:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--void);color:var(--ice);scroll-snap-type:y proximity}
+body{font:400 1.0625rem/1.6 var(--display);background:var(--void);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+img,video{display:block;max-width:100%}
+a{color:inherit}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--volt);outline-offset:3px}
+::selection{background:var(--pink);color:var(--void)}
+.skip{position:absolute;left:-999px;top:8px;background:var(--volt);color:var(--void);padding:8px 14px;z-index:99}
+.skip:focus{left:8px}
+.mono{font-family:var(--mono)}
 
-  /* background grid — viewport floor plane */
-  .floor-grid{
-    position:fixed; inset:0; z-index:0; pointer-events:none;
-    background-image:
-      linear-gradient(var(--grid-line) 1px, transparent 1px),
-      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-    background-size:48px 48px;
-    mask-image:radial-gradient(ellipse at 50% 0%, black 0%, transparent 70%);
-  }
+/* CRT scanlines over everything */
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:60;
+  background:repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, transparent 1px 3px);mix-blend-mode:multiply}
 
-  /* ---------- top HUD nav ---------- */
-  .hud-nav{
-    position:fixed; top:0; left:0; right:0; z-index:50;
-    display:flex; align-items:center; justify-content:space-between;
-    padding:20px 32px;
-    font-family:'JetBrains Mono',monospace;
-    font-size:12px; letter-spacing:0.04em;
-    color:var(--ink-dim);
-    mix-blend-mode:difference;
-  }
-  .hud-nav .brand{ color:var(--ink); font-weight:500; }
-  .hud-nav .brand span{ color:var(--axis-blue); }
-  .hud-links{ display:flex; gap:28px; }
-  .hud-links a{ color:var(--ink-dim); text-decoration:none; transition:color .2s; }
-  .hud-links a:hover{ color:var(--ink); }
+/* clipped-corner buttons */
+.btn{display:inline-flex;align-items:center;gap:10px;padding:12px 26px 12px 20px;font:600 .9375rem/1 var(--display);letter-spacing:.08em;text-transform:uppercase;
+  text-decoration:none;color:var(--void);background:var(--volt);
+  clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,var(--cut) 100%,0 calc(100% - var(--cut)));
+  transition:background .15s, transform .15s}
+.btn:hover{background:var(--cyan);transform:translate(2px,-2px)}
+.btn.ghost{background:transparent;color:var(--cyan);box-shadow:inset 0 0 0 1px var(--cyan)}
+.btn.ghost:hover{background:var(--cyan);color:var(--void)}
 
-  /* ---------- hero / viewport ---------- */
-  .hero{
-    position:relative; height:100vh; min-height:640px;
-    display:flex; align-items:center; justify-content:center;
-    z-index:1;
-  }
-  #hero-canvas{ position:absolute; inset:0; width:100%; height:100%; cursor:grab; }
-  #hero-canvas:active{ cursor:grabbing; }
+/* ---------- header ---------- */
+.top{position:fixed;inset:0 0 auto 0;z-index:30;display:flex;justify-content:space-between;align-items:center;
+  padding:14px var(--gutter);font:400 .875rem var(--mono);text-transform:uppercase;letter-spacing:.06em;
+  padding-bottom:34px;background:linear-gradient(180deg,rgba(7,6,11,.95) 0%,rgba(7,6,11,.75) 55%,rgba(7,6,11,0) 100%)}
+.top a{text-decoration:none}
+.top .mark{font:800 1.25rem var(--name);letter-spacing:.06em}
+.top .mark i{font-style:normal;color:var(--pink)}
+.top nav{display:flex;gap:clamp(14px,3vw,30px);align-items:center}
+.top nav a{color:#AEBBD0}
+.top nav a:hover{color:var(--cyan)}
+.status{display:flex;align-items:center;gap:8px;color:var(--cyan)}
+.status::before{content:"";width:7px;height:7px;background:var(--cyan);box-shadow:0 0 8px var(--cyan);animation:blink 1.4s steps(2) infinite}
+@keyframes blink{50%{opacity:.15}}
 
-  .hero-copy{
-    position:relative; z-index:2; text-align:center; pointer-events:none;
-  }
-  .hero-eyebrow{
-    font-family:'JetBrains Mono',monospace; font-size:12px;
-    letter-spacing:0.18em; text-transform:uppercase; color:var(--axis-amber);
-    margin-bottom:18px;
-  }
-  .hero-title{
-    font-family:'Space Grotesk',sans-serif; font-weight:700;
-    font-size:clamp(2.6rem, 8vw, 6rem); line-height:0.98; letter-spacing:-0.02em;
-  }
-  .hero-sub{
-    margin-top:20px; font-size:1.05rem; color:var(--ink-dim);
-    font-family:'Inter',sans-serif; max-width:480px; margin-left:auto; margin-right:auto;
-  }
+/* ---------- boot / hero ---------- */
+.open{position:relative;height:100svh;min-height:600px;overflow:hidden;scroll-snap-align:start;background:#000}
+.open video,.open .poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(1.3) contrast(1.1) hue-rotate(-12deg)}
+.open .tint{position:absolute;inset:0;background:linear-gradient(115deg, rgba(255,42,109,.42) 0%, rgba(7,6,11,.2) 45%, rgba(5,217,232,.35) 100%);mix-blend-mode:color}
+.open .shade{position:absolute;inset:0;background:
+  linear-gradient(0deg, var(--void) 0%, rgba(7,6,11,.6) 30%, rgba(7,6,11,0) 60%),
+  radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,.7) 100%)}
+.open .grid{position:absolute;left:0;right:0;bottom:0;height:38%;opacity:.35;
+  background:linear-gradient(var(--pink) 1px,transparent 1px) 0 0/100% 32px,linear-gradient(90deg,var(--pink) 1px,transparent 1px) 0 0/48px 100%;
+  transform:perspective(420px) rotateX(62deg);transform-origin:bottom;mask-image:linear-gradient(0deg,#000,transparent)}
+.hud{position:absolute;z-index:2;font:400 .8125rem/1.5 var(--mono);color:var(--cyan);text-transform:uppercase;letter-spacing:.05em}
+.hud.tr{top:76px;right:var(--gutter);text-align:right}
+.hud.tl{top:76px;left:var(--gutter)}
+.hud b{color:var(--pink);font-weight:400}
+.title{position:absolute;z-index:2;left:var(--gutter);right:var(--gutter);bottom:clamp(40px,9vh,96px)}
+.title .kana{font:400 clamp(.95rem,1.6vw,1.25rem) var(--mono);color:var(--pink);letter-spacing:.3em;margin-bottom:6px}
+.glitch{position:relative;display:inline-block;font:800 clamp(3.2rem,9.6vw,11rem)/.9 var(--name);white-space:nowrap;text-transform:uppercase;letter-spacing:.03em;
+  color:var(--ice);text-shadow:0 0 30px rgba(5,217,232,.35)}
+.glitch::before,.glitch::after{content:attr(data-text);position:absolute;inset:0;pointer-events:none}
+.glitch::before{color:var(--pink);transform:translate(-3px,0);clip-path:inset(0 0 0 0);mix-blend-mode:screen;animation:slice-a 3.2s infinite steps(1)}
+.glitch::after{color:var(--cyan);transform:translate(3px,0);clip-path:inset(0 0 0 0);mix-blend-mode:screen;animation:slice-b 3.2s infinite steps(1)}
+@keyframes slice-a{0%,86%,100%{clip-path:inset(0 0 100% 0)}87%{clip-path:inset(10% 0 62% 0);transform:translate(-8px,0)}89%{clip-path:inset(55% 0 20% 0);transform:translate(6px,0)}91%{clip-path:inset(30% 0 45% 0);transform:translate(-4px,0)}93%{clip-path:inset(0 0 100% 0)}}
+@keyframes slice-b{0%,87%,100%{clip-path:inset(0 0 100% 0)}88%{clip-path:inset(65% 0 8% 0);transform:translate(8px,0)}90%{clip-path:inset(15% 0 70% 0);transform:translate(-6px,0)}92%{clip-path:inset(40% 0 35% 0);transform:translate(5px,0)}94%{clip-path:inset(0 0 100% 0)}}
+.title .role{font:500 clamp(1.05rem,2vw,1.5rem)/1.35 var(--display);margin-top:14px;max-width:40ch;color:var(--ice)}
+.title .role .mono{color:var(--cyan)}
+.caret{display:inline-block;width:.55em;height:1em;background:var(--cyan);vertical-align:-.12em;margin-left:4px;animation:blink 1s steps(2) infinite}
+.title .meta{display:flex;flex-wrap:wrap;gap:14px 26px;align-items:center;margin-top:28px;font:400 .875rem var(--mono);color:var(--dim);text-transform:uppercase}
+.title .meta a{color:var(--cyan)}
+.title .meta .btn{color:var(--void)}
 
-  /* HUD overlays inside viewport */
-  .hud-coords{
-    position:absolute; top:90px; right:32px; z-index:3;
-    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-dim);
-    text-align:right; line-height:1.7;
-  }
-  .hud-coords b{ color:var(--axis-blue); font-weight:500; }
+/* ---------- the reel ---------- */
+.reel{position:relative;scroll-snap-align:start}
+.stage{position:relative;height:100svh;min-height:600px;overflow:hidden;background:#000}
+.track{display:flex;height:100%;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none}
+.track::-webkit-scrollbar{display:none}
+.track .shot{scroll-snap-align:start;scroll-snap-stop:always}
+.reel-nav{position:absolute;z-index:5;top:50%;transform:translateY(-50%);width:52px;height:52px;display:grid;place-items:center;
+  font:400 1.3rem var(--mono);color:var(--cyan);background:rgba(7,6,11,.75);box-shadow:inset 0 0 0 1px var(--cyan);
+  clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));transition:background .15s,color .15s,opacity .2s}
+.reel-nav:hover{background:var(--cyan);color:var(--void)}
+.reel-nav:disabled{opacity:.25;pointer-events:none}
+.reel-nav.prev{left:calc(var(--gutter) - 40px)} .reel-nav.next{right:calc(var(--gutter) - 40px)}
+@media (min-width:761px){.reel-nav.prev{left:12px} .reel-nav.next{right:12px}}
+.skipwork{position:absolute;z-index:5;right:var(--gutter);top:76px;font:400 .8125rem var(--mono);text-transform:uppercase;color:var(--dim);text-decoration:none;
+  background:rgba(7,6,11,.7);padding:6px 10px}
+.skipwork:hover{color:var(--cyan)}
+.shot{position:relative;flex:0 0 100%;height:100%;overflow:hidden;background:#000}
+.shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:contrast(1.08) saturate(1.1);transform:scale(1.05);transition:transform 1.4s cubic-bezier(.2,.7,.2,1)}
+.shot.on img{transform:scale(1)}
+.shot::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:
+  linear-gradient(90deg, rgba(7,6,11,.92) 0%, rgba(7,6,11,.55) 34%, rgba(7,6,11,0) 62%),
+  linear-gradient(0deg, rgba(7,6,11,.85) 0%, rgba(7,6,11,0) 38%)}
+/* corner brackets framing each shot */
+.frame-hud{position:absolute;inset:72px var(--gutter) 128px;z-index:2;pointer-events:none;
+  background:
+   linear-gradient(var(--cyan),var(--cyan)) 0 0/28px 2px no-repeat,
+   linear-gradient(var(--cyan),var(--cyan)) 0 0/2px 28px no-repeat,
+   linear-gradient(var(--cyan),var(--cyan)) 100% 0/28px 2px no-repeat,
+   linear-gradient(var(--cyan),var(--cyan)) 100% 0/2px 28px no-repeat,
+   linear-gradient(var(--pink),var(--pink)) 0 100%/28px 2px no-repeat,
+   linear-gradient(var(--pink),var(--pink)) 0 100%/2px 28px no-repeat,
+   linear-gradient(var(--pink),var(--pink)) 100% 100%/28px 2px no-repeat,
+   linear-gradient(var(--pink),var(--pink)) 100% 100%/2px 28px no-repeat}
+.readout{position:absolute;z-index:3;top:118px;right:calc(var(--gutter) + 18px);padding:8px 12px;background:rgba(7,6,11,.72);box-shadow:inset -2px 0 0 var(--cyan);text-align:right;font:400 .8125rem/1.6 var(--mono);color:var(--cyan);text-transform:uppercase;letter-spacing:.05em}
+.readout .rec{color:var(--pink)}
+.readout .rec::before{content:"● ";animation:blink 1.2s steps(2) infinite}
+.slate{position:absolute;z-index:3;left:calc(var(--gutter) + 18px);bottom:150px;max-width:min(600px,80vw)}
+.slate .no{font:400 .875rem var(--mono);color:var(--pink);letter-spacing:.08em;text-transform:uppercase}
+.slate h2{font:700 clamp(2.4rem,5.8vw,5.4rem)/.92 var(--display);text-transform:uppercase;letter-spacing:-.005em;margin:.2em 0 .35em;
+  text-shadow:2px 0 0 rgba(255,42,109,.7),-2px 0 0 rgba(5,217,232,.7)}
+.slate p{color:#B9C6D6;max-width:44ch}
+.award{display:inline-block;margin-top:16px;padding:5px 12px;font:600 .8125rem var(--display);letter-spacing:.1em;text-transform:uppercase;
+  background:var(--pink);color:var(--void);clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)}
+.slate .frames{margin-top:24px}
+.shot .hit{position:absolute;inset:0;z-index:2}
 
-  .render-toggle{
-    position:absolute; bottom:40px; right:32px; z-index:3;
-    display:flex; align-items:center; gap:10px;
-    background:var(--bg-panel); border:1px solid var(--grid-line);
-    padding:8px 14px; border-radius:var(--radius);
-    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-dim);
-    cursor:pointer; user-select:none; transition:border-color .2s;
-  }
-  .render-toggle:hover{ border-color:var(--axis-blue); }
-  .render-toggle .dot{
-    width:7px; height:7px; border-radius:50%; background:var(--axis-blue);
-    box-shadow:0 0 8px var(--axis-blue);
-  }
+/* timeline as a data stream */
+.timeline{position:absolute;z-index:4;left:var(--gutter);right:var(--gutter);bottom:26px;display:flex;gap:6px;align-items:end}
+.timeline a{position:relative;flex:1;height:52px;overflow:hidden;opacity:.4;transition:opacity .25s,height .25s,box-shadow .25s;box-shadow:inset 0 0 0 1px var(--line)}
+.timeline a img{width:100%;height:100%;object-fit:cover;filter:grayscale(.6)}
+.timeline a:hover{opacity:.85}
+.timeline a[aria-current="true"]{opacity:1;height:66px;box-shadow:0 0 0 1px var(--pink),0 0 18px rgba(255,42,109,.6)}
+.timeline a[aria-current="true"] img{filter:none}
+.timeline a span{position:absolute;left:0;right:0;bottom:0;padding:2px 6px;font:400 .6875rem var(--mono);text-transform:uppercase;
+  background:linear-gradient(0deg,rgba(0,0,0,.85),transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.playhead{position:absolute;z-index:5;left:var(--gutter);right:var(--gutter);bottom:102px;height:2px;background:rgba(5,217,232,.15)}
+.playhead b{display:block;height:2px;width:0;background:linear-gradient(90deg,var(--cyan),var(--pink));box-shadow:0 0 10px var(--pink)}
 
-  .orbit-hint{
-    position:absolute; bottom:40px; left:32px; z-index:3;
-    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-dim);
-    display:flex; align-items:center; gap:8px;
-  }
-  .orbit-hint .key{
-    border:1px solid var(--grid-line); border-radius:3px; padding:2px 6px; color:var(--ink);
-  }
+/* ---------- sections ---------- */
+section.page{position:relative;padding:clamp(80px,14vh,150px) var(--gutter);scroll-snap-align:start}
+.page h2,.page-h{font:700 clamp(2.2rem,5vw,4.2rem)/1 var(--display);text-transform:uppercase;letter-spacing:-.005em}
+.page h2 .mono,.page-h .mono{display:block;font-size:.875rem;color:var(--pink);letter-spacing:.12em;margin-bottom:12px;font-weight:400}
+.lede{color:var(--dim);margin-top:14px;max-width:52ch}
 
-  /* axis gizmo */
-  .gizmo{ position:absolute; bottom:100px; left:34px; z-index:3; opacity:0.85; }
+.sheet{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(12px,1.8vw,22px);margin-top:48px}
+.sheet button{text-align:left}
+.sheet figure{position:relative;overflow:hidden;box-shadow:inset 0 0 0 1px var(--line);
+  clip-path:polygon(0 0,calc(100% - 22px) 0,100% 22px,100% 100%,0 100%)}
+.sheet img{aspect-ratio:16/10;width:100%;object-fit:cover;filter:grayscale(.4) contrast(1.05);transition:filter .25s}
+.sheet button:hover img{filter:none}
+.sheet button:hover figure{box-shadow:inset 0 0 0 1px var(--cyan)}
+.sheet figcaption{padding:12px 2px 0;font:600 1rem var(--display);text-transform:uppercase;letter-spacing:.03em}
+.sheet figcaption em{display:block;font:400 .8125rem var(--mono);color:var(--dim);font-style:normal;text-transform:none}
 
-  .scroll-cue{
-    position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
-    z-index:3; font-family:'JetBrains Mono',monospace; font-size:10px;
-    color:var(--ink-dim); letter-spacing:0.15em; text-transform:uppercase;
-    animation:pulse 2.4s ease-in-out infinite;
-  }
-  @keyframes pulse{ 0%,100%{opacity:.35;} 50%{opacity:.9;} }
+/* terminal credits */
+.term{max-width:960px;margin-top:48px;background:var(--panel);box-shadow:0 0 0 1px var(--line),0 0 60px rgba(5,217,232,.08);
+  clip-path:polygon(0 0,calc(100% - 26px) 0,100% 26px,100% 100%,26px 100%,0 calc(100% - 26px))}
+.term .bar{display:flex;justify-content:space-between;padding:10px 18px;font:400 .8125rem var(--mono);color:var(--dim);border-bottom:1px solid var(--line)}
+.term .bar span:first-child{color:var(--cyan)}
+.term .body{padding:22px 22px 30px;font:400 clamp(.875rem,1.2vw,1rem)/1.75 var(--mono)}
+.term .cmd{color:var(--pink);margin-top:18px}
+.term .cmd:first-child{margin-top:0}
+.term .cmd::before{content:"havya:~$ ";color:var(--cyan)}
+.term .out{color:var(--ice);padding-left:2ch}
+.term .out em{font-style:normal;color:var(--volt)}
 
-  /* ---------- section shell ---------- */
-  section{ position:relative; z-index:1; padding:120px 32px; max-width:1240px; margin:0 auto; }
-  .section-head{ display:flex; align-items:baseline; gap:18px; margin-bottom:56px; }
-  .section-index{
-    font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--axis-blue);
-  }
-  .section-title{
-    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:2rem; letter-spacing:-0.01em;
-  }
-  .section-rule{ flex:1; height:1px; background:var(--grid-line); }
+/* contact */
+.contact{background:radial-gradient(ellipse at 20% 100%, rgba(255,42,109,.18), transparent 60%),var(--void);padding-bottom:56px}
+.contact .big{display:inline-block;margin-top:30px;font:700 clamp(1.5rem,5.4vw,4.6rem)/1.05 var(--display);text-decoration:none;word-break:break-word;
+  color:var(--cyan);text-shadow:0 0 24px rgba(5,217,232,.45);transition:color .15s,text-shadow .15s}
+.reach{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin-top:30px}
+.reach .big{margin-top:0}
+.contact .big.phone{font-size:clamp(1.3rem,3.6vw,3rem);color:var(--ice);text-shadow:0 0 18px rgba(209,247,255,.25)}
+.contact .big:hover{color:var(--pink);text-shadow:3px 0 var(--cyan),-3px 0 var(--volt),0 0 28px rgba(255,42,109,.6)}
+.links{display:flex;flex-wrap:wrap;gap:12px;margin-top:44px}
+.foot{margin-top:90px;padding-top:20px;border-top:1px solid var(--line);color:var(--dim);font:400 .8125rem var(--mono);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;text-transform:uppercase}
 
-  /* ---------- work grid ---------- */
-  .work-grid{
-    display:grid; grid-template-columns:repeat(3, 1fr); gap:28px;
-    perspective:1200px;
-  }
-  @media (max-width:900px){ .work-grid{ grid-template-columns:repeat(2,1fr); } }
-  @media (max-width:600px){ .work-grid{ grid-template-columns:1fr; } }
+/* ---------- viewer ---------- */
+dialog{border:0;padding:0;margin:0;width:100vw;height:100vh;max-width:none;max-height:none;background:rgba(7,6,11,.97);color:var(--ice)}
+dialog::backdrop{background:#000}
+.v{display:grid;grid-template-rows:auto 1fr auto;height:100%}
+.v header{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:18px var(--gutter);border-bottom:1px solid var(--line)}
+.v h3{font:700 clamp(1.3rem,2.4vw,1.9rem) var(--display);text-transform:uppercase;display:inline}
+.v .count{font:400 .875rem var(--mono);color:var(--pink);margin-left:14px}
+.v header{align-items:center}
+.v .close{flex:none;width:44px;height:44px;display:grid;place-items:center;color:var(--cyan);background:rgba(7,6,11,.75);
+  box-shadow:inset 0 0 0 1px var(--cyan);clip-path:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,9px 100%,0 calc(100% - 9px));transition:background .15s,color .15s}
+.v .close svg{width:18px;height:18px;stroke:currentColor;stroke-width:2;stroke-linecap:square}
+.v .close:hover{background:var(--pink);color:var(--void);box-shadow:none}
+.v .frame{position:relative;display:flex;align-items:center;justify-content:center;min-height:0;padding:18px var(--gutter)}
+.v .frame img,.v .frame video{max-height:100%;max-width:100%;object-fit:contain;box-shadow:0 0 0 1px var(--line)}
+.v .nav{position:absolute;top:50%;transform:translateY(-50%);width:50px;height:50px;font:400 1.3rem var(--mono);color:var(--cyan);background:rgba(7,6,11,.75);box-shadow:inset 0 0 0 1px var(--cyan)}
+.v .nav:hover{background:var(--cyan);color:var(--void)}
+.v .prev{left:var(--gutter)} .v .next{right:var(--gutter)}
+.v .thumbs{display:flex;gap:8px;justify-content:center;padding:14px var(--gutter) 20px;overflow-x:auto;border-top:1px solid var(--line)}
+.v .thumbs button{flex:0 0 96px;height:56px;opacity:.4;position:relative;background:var(--panel);box-shadow:inset 0 0 0 1px var(--line)}
+.v .thumbs button[aria-current="true"]{opacity:1;box-shadow:0 0 0 1px var(--pink),0 0 14px rgba(255,42,109,.6)}
+.v .thumbs img{width:100%;height:100%;object-fit:cover}
+.v .thumbs .play{position:absolute;inset:0;display:grid;place-items:center;font:400 .75rem var(--mono);color:var(--cyan)}
 
-  .work-card{
-    position:relative; border-radius:var(--radius); overflow:hidden;
-    background:var(--bg-panel); border:1px solid var(--grid-line);
-    transform-style:preserve-3d; transition:transform .12s ease-out, border-color .3s;
-    cursor:pointer;
-  }
-  .work-card:hover{ border-color:var(--axis-blue); }
-  .work-tile{
-    height:240px; width:100%;
-    display:flex; align-items:center; justify-content:center;
-    position:relative; overflow:hidden; background:#101114;
-  }
-  .work-tile img{
-    width:100%; height:100%; object-fit:cover; display:block;
-    transform:translateZ(18px) scale(1.02);
-    transition:transform .4s ease;
-  }
-  .work-card:hover .work-tile img{ transform:translateZ(18px) scale(1.08); }
-  .work-tile .angle-count{
-    position:absolute; bottom:10px; right:12px; z-index:2;
-    font-family:'JetBrains Mono',monospace; font-size:10px; color:#eef0ef;
-    background:rgba(0,0,0,0.55); padding:3px 8px; border-radius:3px;
-    letter-spacing:0.04em;
-  }
-  .work-meta{ padding:16px 18px 20px; transform:translateZ(30px); }
-  .work-tag{
-    font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--axis-amber);
-    text-transform:uppercase; letter-spacing:0.08em;
-  }
-  .work-name{
-    font-family:'Space Grotesk',sans-serif; font-size:1.05rem; font-weight:500; margin-top:6px;
-  }
-  .work-id{
-    position:absolute; top:12px; left:14px; z-index:2;
-    font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--ink-dim);
-  }
+/* ---------- small screens ---------- */
+/* ---------- live 3D model ---------- */
+.model{position:relative;padding:clamp(80px,12vh,130px) var(--gutter) 40px;scroll-snap-align:start;
+  background:radial-gradient(ellipse at 15% 85%, rgba(255,42,109,.16), transparent 55%),radial-gradient(ellipse at 85% 20%, rgba(5,217,232,.14), transparent 55%),var(--void)}
+.model .head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:20px}
+.viewport{position:relative;margin-top:36px;height:min(76vh,760px);min-height:420px;box-shadow:0 0 0 1px var(--line);overflow:hidden;
+  clip-path:polygon(0 0,calc(100% - 30px) 0,100% 30px,100% 100%,30px 100%,0 calc(100% - 30px));
+  background:linear-gradient(180deg,rgba(17,15,26,.6),rgba(7,6,11,.9))}
+.viewport canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+.viewport canvas:active{cursor:grabbing}
+.vp-hud{position:absolute;z-index:2;font:400 .8125rem/1.6 var(--mono);text-transform:uppercase;letter-spacing:.05em;pointer-events:none}
+.vp-hud.stats{top:18px;left:22px;color:var(--cyan);background:rgba(7,6,11,.7);padding:10px 14px;box-shadow:inset 2px 0 0 var(--cyan)}
+.vp-hud.stats b{font-weight:400;color:var(--ice)}
+.vp-hud.tip{right:22px;bottom:18px;color:var(--dim);text-align:right}
+.modes{position:absolute;z-index:3;top:18px;right:22px;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;max-width:70%}
+.mode{font:400 .8125rem var(--mono);text-transform:uppercase;color:var(--cyan);background:rgba(7,6,11,.75);padding:8px 12px;box-shadow:inset 0 0 0 1px var(--line)}
+.mode:hover{box-shadow:inset 0 0 0 1px var(--cyan)}
+.mode[aria-pressed="true"]{background:var(--cyan);color:var(--void);box-shadow:none}
+.loading{position:absolute;inset:0;z-index:4;display:grid;place-items:center;align-content:center;gap:14px;font:400 .875rem var(--mono);color:var(--cyan);text-transform:uppercase;
+  background:rgba(7,6,11,.85);transition:opacity .4s}
+.loading.done{opacity:0;pointer-events:none}
+.loading .meter{width:min(320px,60vw);height:2px;background:rgba(5,217,232,.15)}
+.loading .meter b{display:block;height:100%;width:0;background:var(--pink);box-shadow:0 0 10px var(--pink)}
+.loading .btn{pointer-events:auto}
 
-  /* second grid for supporting single-shot pieces */
-  .work-grid-secondary{
-    display:grid; grid-template-columns:repeat(4, 1fr); gap:22px;
-    perspective:1200px; margin-top:22px;
-  }
-  @media (max-width:900px){ .work-grid-secondary{ grid-template-columns:repeat(2,1fr); } }
-  @media (max-width:600px){ .work-grid-secondary{ grid-template-columns:1fr; } }
-  .work-grid-secondary .work-tile{ height:170px; }
+/* ---------- boot sequence ---------- */
+.boot{position:fixed;inset:0;z-index:80;background:var(--void);display:flex;flex-direction:column;justify-content:flex-end;
+  padding:var(--gutter);font:400 clamp(.8rem,1.3vw,.95rem)/1.8 var(--mono);color:var(--cyan);transition:opacity .5s,visibility .5s}
+.boot.gone{opacity:0;visibility:hidden}
+.boot .ok{color:var(--volt)}
+.boot .skiphint{position:absolute;top:var(--gutter);right:var(--gutter);color:var(--dim);text-transform:uppercase}
+.boot .meter{height:2px;max-width:420px;margin-top:16px;background:rgba(5,217,232,.15)}
+.boot .meter b{display:block;height:100%;width:0;background:var(--pink);box-shadow:0 0 10px var(--pink);transition:width .15s}
+html.booting{overflow:hidden}
 
-  /* ---------- about / inspector panel ---------- */
-  .inspector{
-    background:var(--bg-panel); border:1px solid var(--grid-line); border-radius:var(--radius);
-    display:grid; grid-template-columns:220px 1fr; gap:0;
-  }
-  @media (max-width:720px){ .inspector{ grid-template-columns:1fr; } }
-  .inspector-row{
-    display:contents;
-  }
-  .inspector-label{
-    padding:22px 24px; font-family:'JetBrains Mono',monospace; font-size:11px;
-    color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.08em;
-    border-top:1px solid var(--grid-line); border-right:1px solid var(--grid-line);
-  }
-  .inspector-value{
-    padding:22px 24px; border-top:1px solid var(--grid-line); font-size:0.98rem;
-  }
-  .inspector-row:first-child .inspector-label,
-  .inspector-row:first-child .inspector-value{ border-top:none; }
-  .chips{ display:flex; flex-wrap:wrap; gap:8px; }
-  .chip{
-    font-family:'JetBrains Mono',monospace; font-size:11px; padding:5px 10px;
-    background:var(--bg-panel-hi); border:1px solid var(--grid-line); border-radius:3px;
-    color:var(--ink);
-  }
-  .inspector-value.bio{ color:var(--ink-dim); line-height:1.7; max-width:60ch; }
+/* ---------- targeting reticle ---------- */
+.reticle{position:fixed;left:0;top:0;z-index:70;width:34px;height:34px;margin:-17px 0 0 -17px;pointer-events:none;opacity:0;
+  border:1px solid var(--cyan);border-radius:50%;transition:width .18s,height .18s,margin .18s,border-radius .18s,border-color .18s,opacity .2s}
+.reticle::after{content:"";position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px;background:var(--pink)}
+.reticle.lock{width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:0;border-color:var(--pink);box-shadow:0 0 14px rgba(255,42,109,.5)}
 
-  /* ---------- footer / contact ---------- */
-  footer{
-    position:relative; z-index:1; padding:80px 32px 48px; text-align:center;
-    border-top:1px solid var(--grid-line);
-  }
-  .footer-title{
-    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:1.8rem; margin-bottom:20px;
-  }
-  .footer-links{
-    display:flex; justify-content:center; gap:26px; flex-wrap:wrap;
-    font-family:'JetBrains Mono',monospace; font-size:12.5px;
-  }
-  .footer-links a{ color:var(--ink-dim); text-decoration:none; transition:color .2s; }
-  .footer-links a:hover{ color:var(--axis-blue); }
-  .footer-note{
-    margin-top:40px; font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--ink-dim); opacity:.6;
-  }
+/* ---------- scan lens ---------- */
+.lens{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;transition:opacity .2s;
+  clip-path:circle(120px at var(--x,50%) var(--y,50%))}
+.lens img{filter:grayscale(1) invert(1) contrast(2.2) brightness(1.05)}
+.lens::before{content:"";position:absolute;inset:0;z-index:1;background:var(--cyan);mix-blend-mode:multiply;opacity:.35}
+.lens::after{content:"";position:absolute;inset:0;z-index:2;mix-blend-mode:screen;background:
+  linear-gradient(rgba(5,217,232,.4) 1px,transparent 1px) 0 0/100% 18px,
+  linear-gradient(90deg,rgba(5,217,232,.4) 1px,transparent 1px) 0 0/18px 100%}
+.ring{position:absolute;z-index:2;left:var(--x,50%);top:var(--y,50%);width:240px;height:240px;margin:-120px 0 0 -120px;pointer-events:none;opacity:0;
+  border:1px solid var(--cyan);border-radius:50%;box-shadow:0 0 24px rgba(5,217,232,.45),inset 0 0 24px rgba(5,217,232,.25);transition:opacity .2s}
+.ring span{position:absolute;left:50%;top:-24px;transform:translateX(-50%);white-space:nowrap;font:400 .75rem var(--mono);color:var(--cyan);text-transform:uppercase;background:rgba(7,6,11,.8);padding:2px 8px}
+.shot.scanning .lens,.shot.scanning .ring{opacity:1}
+.readout .hint{color:var(--volt)}
 
-  @media (prefers-reduced-motion: reduce){
-    .scroll-cue{ animation:none; }
-    html{ scroll-behavior:auto; }
-  }
+/* ---------- live terminal ---------- */
+.term .body{max-height:min(70vh,620px);overflow:auto;scrollbar-color:var(--cyan) transparent}
+.term .out a{color:var(--cyan)}
+.term .err{color:var(--pink);padding-left:2ch}
+.term form{display:flex;align-items:center;margin-top:20px;padding-bottom:4px;box-shadow:inset 0 -1px 0 var(--line)}
+.term form:focus-within{box-shadow:inset 0 -1px 0 var(--volt)}
+.term form label{color:var(--cyan);white-space:pre}
+.term input{flex:1;min-width:0;background:transparent;border:0;outline:0;color:var(--pink);font:inherit;caret-color:var(--volt)}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;max-width:960px}
+.chip{font:400 .8125rem var(--mono);color:var(--cyan);padding:7px 12px;box-shadow:inset 0 0 0 1px var(--line)}
+.chip:hover{box-shadow:inset 0 0 0 1px var(--cyan);color:var(--ice)}
+.chip::before{content:"$ ";color:var(--pink)}
 
-  /* ---------- lightbox ---------- */
-  .lightbox{
-    position:fixed; inset:0; z-index:100; background:rgba(10,11,13,0.94);
-    display:none; align-items:center; justify-content:center;
-    backdrop-filter:blur(6px);
-  }
-  .lightbox.open{ display:flex; }
-  .lb-stage{ position:relative; max-width:min(1100px, 90vw); max-height:82vh; }
-  .lb-stage img, .lb-stage video{
-    max-width:min(1100px, 90vw); max-height:82vh; display:block;
-    border:1px solid var(--grid-line); border-radius:var(--radius);
-    box-shadow:0 30px 80px rgba(0,0,0,0.5);
-  }
-  .lb-caption{ margin-top:16px; text-align:center; }
-  .lb-title{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:1.1rem; }
-  .lb-tag{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--axis-amber); margin-top:4px; }
-  .lb-counter{
-    position:absolute; top:-34px; right:0; font-family:'JetBrains Mono',monospace;
-    font-size:11px; color:var(--ink-dim);
-  }
-  .lb-close{
-    position:absolute; top:24px; right:28px; z-index:101;
-    background:none; border:1px solid var(--grid-line); color:var(--ink);
-    width:38px; height:38px; border-radius:50%; cursor:pointer; font-size:16px;
-    transition:border-color .2s;
-  }
-  .lb-close:hover{ border-color:var(--axis-blue); }
-  .lb-nav{
-    position:relative; z-index:101; background:none; border:1px solid var(--grid-line);
-    color:var(--ink); width:46px; height:46px; border-radius:50%; cursor:pointer;
-    font-size:22px; margin:0 18px; transition:border-color .2s, color .2s; flex-shrink:0;
-  }
-  .lb-nav:hover{ border-color:var(--axis-blue); color:var(--axis-blue); }
-  @media (max-width:720px){
-    .lb-nav{ width:38px; height:38px; margin:0 8px; }
-    .lb-counter{ top:-28px; }
-  }
+/* ---------- overdrive easter egg ---------- */
+html.overdrive{filter:hue-rotate(150deg) saturate(1.5)}
+html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:.7s}
+.toast{position:fixed;left:50%;bottom:28px;z-index:75;transform:translate(-50%,12px);opacity:0;pointer-events:none;padding:10px 20px;
+  background:var(--volt);color:var(--void);font:600 .875rem var(--display);letter-spacing:.1em;text-transform:uppercase;
+  clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);transition:opacity .25s,transform .25s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.open video,.open .poster,.title{transition:transform .25s ease-out}
+
+@media (max-width:760px){
+  html{scroll-snap-type:none}
+  .top .status{display:none}
+  .top .mark{font-size:1rem;letter-spacing:.03em}
+  .top nav{gap:12px}
+  .glitch{font-size:clamp(3rem,15vw,5rem);white-space:normal}
+  .hud.tl{display:none}
+  .hud.tr{top:64px}
+  .frame-hud,.readout,.playhead,.skipwork{display:none}
+  .stage{height:86svh;min-height:520px}
+  .timeline{bottom:14px;gap:5px}
+  .timeline a{height:4px;opacity:.5;box-shadow:none;background:var(--ice)}
+  .timeline a img,.timeline a span{display:none}
+  .timeline a[aria-current="true"]{height:4px;background:var(--pink);box-shadow:0 0 8px var(--pink)}
+  .reel-nav{top:auto;bottom:40px;transform:none;width:44px;height:44px}
+  .reel-nav.prev{left:auto;right:calc(var(--gutter) + 52px)} .reel-nav.next{right:var(--gutter)}
+  .slate{bottom:96px!important}
+  .shot img{transform:none}
+  .shot::before{background:linear-gradient(0deg, rgba(7,6,11,.95) 0%, rgba(7,6,11,.3) 55%, rgba(7,6,11,0) 75%)}
+  .slate{left:var(--gutter);right:var(--gutter);bottom:32px;max-width:none}
+  .sheet{grid-template-columns:1fr}
+  .modes{top:auto;bottom:14px;left:14px;right:14px;max-width:none;justify-content:center}
+  .vp-hud.tip{display:none}
+  .vp-hud.stats{top:12px;left:12px;font-size:.6875rem;padding:6px 10px}
+  .v .nav{top:auto;bottom:6px;transform:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .glitch::before,.glitch::after{display:none}
+  .shot img{transform:none}
+}
 </style>
 </head>
 <body>
-
-<div class="floor-grid"></div>
-
-<nav class="hud-nav">
-  <div class="brand">HAVYA<span>_</span>PANDYA</div>
-  <div class="hud-links">
-    <a href="#work">work</a>
-    <a href="#about">about</a>
-    <a href="#contact">contact</a>
-  </div>
-</nav>
-
-<!-- ================= HERO / VIEWPORT ================= -->
-<section class="hero" style="padding:0;">
-  <canvas id="hero-canvas"></canvas>
-
-  <div class="hero-copy">
-    <div class="hero-eyebrow">Render_Viewport · v1.0</div>
-    <h1 class="hero-title">HAVYA PANDYA</h1>
-    <p class="hero-sub">3D Artist — Game Art, Product Visualization &amp; Architectural Walkthroughs. 4+ years across Blender, Maya &amp; Unreal Engine 5.</p>
-  </div>
-
-  <div class="hud-coords" id="hud-coords">X <b>0.00</b><br>Y <b>0.00</b></div>
-
-  <svg class="gizmo" width="64" height="64" viewBox="0 0 64 64">
-    <line x1="32" y1="32" x2="58" y2="32" stroke="#ff6b6b" stroke-width="2"/>
-    <text x="60" y="36" fill="#ff6b6b" font-family="JetBrains Mono" font-size="9">X</text>
-    <line x1="32" y1="32" x2="32" y2="6" stroke="#63d67f" stroke-width="2"/>
-    <text x="28" y="8" fill="#63d67f" font-family="JetBrains Mono" font-size="9">Y</text>
-    <line x1="32" y1="32" x2="14" y2="48" stroke="#4d8dff" stroke-width="2"/>
-    <text x="4" y="54" fill="#4d8dff" font-family="JetBrains Mono" font-size="9">Z</text>
-    <circle cx="32" cy="32" r="2.5" fill="#eef0ef"/>
-  </svg>
-
-  <div class="orbit-hint"><span class="key">drag</span> to orbit</div>
-
-  <div class="render-toggle" id="render-toggle"><span class="dot"></span><span id="render-toggle-label">shaded</span></div>
-
-  <div class="scroll-cue">scroll ↓</div>
-</section>
-
-<!-- ================= WORK ================= -->
-<section id="work">
-  <div class="section-head">
-    <span class="section-index">01</span>
-    <h2 class="section-title">Selected Work</h2>
-    <div class="section-rule"></div>
-  </div>
-
-  <div class="work-grid" id="work-grid">
-
-    <div class="work-card" data-title="Gujarat University Campus Walkthrough" data-tag="Architectural Walkthrough · ★ Best Project Award" data-images='["assets/gujarat-university-campus-walkthrough-1.jpg","assets/gujarat-university-campus-walkthrough-2.jpg","assets/gujarat-university-campus-walkthrough-3.jpg","assets/gujarat-university-campus-walkthrough-4.jpg","assets/gujarat-university-campus-walkthrough-5.jpg","assets/gujarat-university-campus-walkthrough-6.jpg"]'>
-      <div class="work-id">PROJ_01</div>
-      <div class="work-tile">
-        <img src="assets/gujarat-university-campus-walkthrough-1.jpg" alt="Gujarat University campus walkthrough render" loading="lazy">
-        <span class="angle-count">6 renders</span>
-      </div>
-      <div class="work-meta">
-        <div class="work-tag">Architectural Walkthrough · ★ Best Project Award</div>
-        <div class="work-name">Gujarat University Campus Walkthrough</div>
-      </div>
-    </div>
-
-    <div class="work-card" data-title="Sci-Fi Helmet" data-tag="Hard Surface · Product Render" data-images='["assets/sci-fi-helmet-1.jpg","assets/sci-fi-helmet-2.jpg"]'>
-      <div class="work-id">PROJ_02</div>
-      <div class="work-tile">
-        <img src="assets/sci-fi-helmet-1.jpg" alt="Sci-fi helmet render" loading="lazy">
-        <span class="angle-count">2 renders</span>
-      </div>
-      <div class="work-meta">
-        <div class="work-tag">Hard Surface · Product Render</div>
-        <div class="work-name">Sci-Fi Helmet</div>
-      </div>
-    </div>
-
-    <div class="work-card" data-title="Vintage Radio" data-tag="Product Visualization · PBR" data-images='["assets/vintage-radio-1.jpg","assets/vintage-radio-2.jpg","assets/vintage-radio-3.jpg","assets/vintage-radio-4.jpg","assets/vintage-radio-5.jpg"]'>
-      <div class="work-id">PROJ_03</div>
-      <div class="work-tile">
-        <img src="assets/vintage-radio-1.jpg" alt="Vintage radio product render" loading="lazy">
-        <span class="angle-count">5 renders</span>
-      </div>
-      <div class="work-meta">
-        <div class="work-tag">Product Visualization · PBR</div>
-        <div class="work-name">Vintage Radio</div>
-      </div>
-    </div>
-
-    <div class="work-card" data-title="Katana" data-tag="Prop Design · Game-Ready" data-images='["assets/katana-1.jpg","assets/katana-2.jpg"]'>
-      <div class="work-id">PROJ_04</div>
-      <div class="work-tile">
-        <img src="assets/katana-1.jpg" alt="Katana prop render" loading="lazy">
-        <span class="angle-count">2 renders</span>
-      </div>
-      <div class="work-meta">
-        <div class="work-tag">Prop Design · Game-Ready</div>
-        <div class="work-name">Katana</div>
-      </div>
-    </div>
-
-    <div class="work-card" data-title="Smartwatch" data-tag="Consumer Electronics · Photoreal" data-images='["assets/smartwatch-1.jpg","assets/smartwatch-2.jpg"]'>
-      <div class="work-id">PROJ_05</div>
-      <div class="work-tile">
-        <img src="assets/smartwatch-1.jpg" alt="Smartwatch product render" loading="lazy">
-        <span class="angle-count">2 renders</span>
-      </div>
-      <div class="work-meta">
-        <div class="work-tag">Consumer Electronics · Photoreal</div>
-        <div class="work-name">Smartwatch</div>
-      </div>
-    </div>
-
-    <div class="work-card" data-title="Console Controller" data-tag="Consumer Electronics · Photoreal" data-images='["assets/console-controller-1.jpg","assets/console-controller-2.jpg"]'>
-      <div class="work-id">PROJ_06</div>
-      <div class="work-tile">
-        <img src="assets/console-controller-1.jpg" alt="Console controller render" loading="lazy">
-        <span class="angle-count">2 renders</span>
-      </div>
-      <div class="work-meta">
-        <div class="work-tag">Consumer Electronics · Photoreal</div>
-        <div class="work-name">Console Controller</div>
-      </div>
-    </div>
-
-    <div class="work-card" data-title="Sci-Fi Armor Suit" data-tag="Character Armor · Hard Surface" data-images='["assets/sci-fi-armor-suit-1.jpg","assets/sci-fi-armor-suit-2.jpg"]'>
-      <div class="work-id">PROJ_07</div>
-      <div class="work-tile">
-        <img src="assets/sci-fi-armor-suit-1.jpg" alt="Sci-fi armor suit render" loading="lazy">
-        <span class="angle-count">2 renders</span>
-      </div>
-      <div class="work-meta">
-        <div class="work-tag">Character Armor · Hard Surface</div>
-        <div class="work-name">Sci-Fi Armor Suit</div>
-      </div>
-    </div>
-
-    <div class="work-card" data-title="Porsche 911 Study" data-tag="Vehicle · Cinematic Lighting" data-images='["assets/porsche-911-study-1.jpg","assets/porsche-911-study-2.jpg"]'>
-      <div class="work-id">PROJ_08</div>
-      <div class="work-tile">
-        <img src="assets/porsche-911-study-1.jpg" alt="Porsche 911 render" loading="lazy">
-        <span class="angle-count">2 renders</span>
-      </div>
-      <div class="work-meta">
-        <div class="work-tag">Vehicle · Cinematic Lighting</div>
-        <div class="work-name">Porsche 911 Study</div>
-      </div>
-    </div>
-
-    <div class="work-card" data-title="Unreal Engine Environments" data-tag="Real-Time · UE5, Lumen &amp; Nanite" data-images='["assets/unreal-engine-environments-1.jpg","assets/unreal-engine-environments-2.jpg","assets/unreal-engine-environments-3.mp4","assets/unreal-engine-environments-4.mp4","assets/unreal-engine-environments-5.jpg"]'>
-      <div class="work-id">PROJ_09</div>
-      <div class="work-tile">
-        <img src="assets/unreal-engine-environments-1.jpg" alt="Unreal Engine gothic castle environment render" loading="lazy">
-        <span class="angle-count">5 · incl. video</span>
-      </div>
-      <div class="work-meta">
-        <div class="work-tag">Real-Time · UE5, Lumen &amp; Nanite</div>
-        <div class="work-name">Unreal Engine Environments</div>
-      </div>
-    </div>
-
-  </div>
-
-  <div style="display:flex; align-items:center; gap:14px; margin:56px 0 26px;">
-    <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-dim); letter-spacing:0.1em; text-transform:uppercase;">More Renders</span>
-    <div style="flex:1; height:1px; background:var(--grid-line);"></div>
-  </div>
-
-  <div class="work-grid-secondary" id="work-grid-secondary">
-    <div class="work-card" data-title="Robot Study" data-tag="Character / Prop" data-images='["assets/robot-study-1.jpg"]'>
-      <div class="work-tile"><img src="assets/robot-study-1.jpg" alt="Robot character render" loading="lazy"></div>
-      <div class="work-meta"><div class="work-tag">Character / Prop</div><div class="work-name">Robot Study</div></div>
-    </div>
-    <div class="work-card" data-title="Walkie-Talkie" data-tag="Product Render" data-images='["assets/walkie-talkie-1.jpg"]'>
-      <div class="work-tile"><img src="assets/walkie-talkie-1.jpg" alt="Walkie-talkie render" loading="lazy"></div>
-      <div class="work-meta"><div class="work-tag">Product Render</div><div class="work-name">Walkie-Talkie</div></div>
-    </div>
-    <div class="work-card" data-title="Upasna" data-tag="Architecture" data-images='["assets/upasna-1.jpg"]'>
-      <div class="work-tile"><img src="assets/upasna-1.jpg" alt="Upasna amphitheatre architectural render" loading="lazy"></div>
-      <div class="work-meta"><div class="work-tag">Architecture</div><div class="work-name">Upasna</div></div>
-    </div>
-    <div class="work-card" data-title="Samurai" data-tag="Samurai Armor &amp; Katana" data-images='["assets/samurai-1.jpg"]'>
-      <div class="work-tile"><img src="assets/samurai-1.jpg" alt="Samurai armor and katana render" loading="lazy"></div>
-      <div class="work-meta"><div class="work-tag">Samurai Armor &amp; Katana</div><div class="work-name">Samurai</div></div>
-    </div>
-  </div>
-</section>
-
-<!-- ================= ABOUT ================= -->
-<section id="about">
-  <div class="section-head">
-    <span class="section-index">02</span>
-    <h2 class="section-title">About</h2>
-    <div class="section-rule"></div>
-  </div>
-
-  <div class="inspector">
-    <div class="inspector-row">
-      <div class="inspector-label">Name</div>
-      <div class="inspector-value">Havya Pandya</div>
-    </div>
-    <div class="inspector-row">
-      <div class="inspector-label">Role</div>
-      <div class="inspector-value">3D Artist — Game Art, Product Visualization &amp; Architectural Walkthroughs</div>
-    </div>
-    <div class="inspector-row">
-      <div class="inspector-label">Location</div>
-      <div class="inspector-value">Ahmedabad, Gujarat, India</div>
-    </div>
-    <div class="inspector-row">
-      <div class="inspector-label">Tools</div>
-      <div class="inspector-value">
-        <div class="chips">
-          <span class="chip">Blender</span>
-          <span class="chip">Autodesk Maya</span>
-          <span class="chip">3ds Max</span>
-          <span class="chip">ZBrush</span>
-          <span class="chip">Substance Painter</span>
-          <span class="chip">Marmoset Toolbag</span>
-          <span class="chip">Unreal Engine 5</span>
-          <span class="chip">Unity</span>
-        </div>
-      </div>
-    </div>
-    <div class="inspector-row">
-      <div class="inspector-label">Bio</div>
-      <div class="inspector-value bio">Results-driven 3D artist with 4+ years of hands-on experience in modeling, PBR texturing, UV unwrapping, lighting, and rendering. Delivered game-ready assets, photorealistic product visualizations, and architectural walkthroughs across academic, freelance, and shipped commercial work — including sole 3D artist duties on a published Android game. Currently expanding into real-time rendering with Lumen and Nanite in Unreal Engine 5. Open to full-time, freelance, and remote opportunities in game art, VFX, or archviz.</div>
-    </div>
-    <div class="inspector-row">
-      <div class="inspector-label">Education</div>
-      <div class="inspector-value">M.Sc. Animation, Gujarat University (2024–2026) · B.Sc. Animation, Gujarat University (2021–2024), CGPA 9.0/10</div>
-    </div>
-    <div class="inspector-row">
-      <div class="inspector-label">Contact</div>
-      <div class="inspector-value">
-        <a href="mailto:havyapandya4@gmail.com" style="color:var(--ink); text-decoration:none; border-bottom:1px solid var(--grid-line);">havyapandya4@gmail.com</a>
-        &nbsp;·&nbsp;
-        <a href="tel:+919879814973" style="color:var(--ink); text-decoration:none; border-bottom:1px solid var(--grid-line);">+91 98798 14973</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ================= CONTACT ================= -->
-<footer id="contact">
-  <div class="footer-title">Let's build something.</div>
-  <div class="footer-links">
-    <a href="mailto:havyapandya4@gmail.com">email</a>
-    <a href="https://www.artstation.com/havyapandya5" target="_blank" rel="noopener">artstation</a>
-    <a href="https://linkedin.com/in/havyapandya" target="_blank" rel="noopener">linkedin</a>
-    <a href="https://play.google.com/store/apps/details?id=com.shinigamistudios.colordrop" target="_blank" rel="noopener">color drop (play store)</a>
-    <a href="https://youtube.com/@havyapandya3072?si=yeCBPM3Jy1ZNkUBC" target="_blank" rel="noopener">youtube</a>
-  </div>
-  <div class="footer-note">rendered in a browser · viewport template v1.0</div>
-</footer>
-
-<div class="lightbox" id="lightbox">
-  <button class="lb-close" id="lb-close" aria-label="Close">✕</button>
-  <button class="lb-nav lb-prev" id="lb-prev" aria-label="Previous">‹</button>
-  <div class="lb-stage">
-    <div id="lb-media-wrap">
-      <img id="lb-image" src="" alt="">
-    </div>
-    <div class="lb-caption">
-      <div class="lb-title" id="lb-title"></div>
-      <div class="lb-tag" id="lb-tag"></div>
-    </div>
-    <div class="lb-counter" id="lb-counter"></div>
-  </div>
-  <button class="lb-nav lb-next" id="lb-next" aria-label="Next">›</button>
+<div class="boot" id="boot" aria-hidden="true">
+  <div class="skiphint">Press any key to skip</div>
+  <div id="boot-lines"></div>
+  <div class="meter"><b id="boot-meter"></b></div>
 </div>
+<script>
+  // safety net: never let the boot screen cover the site, even if the main script fails
+  setTimeout(function(){ var b=document.getElementById('boot'); if(b){ b.classList.add('gone'); document.documentElement.classList.remove('booting'); setTimeout(function(){ b.remove(); },600); } }, 4500);
+</script>
+<div class="reticle" id="reticle" aria-hidden="true"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<a class="skip" href="#reel">Skip to the work</a>
+
+<header class="top">
+  <a class="mark" href="#">HAVYA<i>//</i>PANDYA</a>
+  <nav aria-label="Main">
+    <span class="status">Available for hire</span>
+    <a href="#reel">Work</a>
+    <a href="#model">3D</a>
+    <a href="#credits">About</a>
+    <a href="#contact">Contact</a>
+  </nav>
+</header>
+
+<section class="open" aria-label="Introduction">
+  <img class="poster" src="assets/hero-ue5-poster.jpg?v=2" alt="">
+  <video id="hero-video" autoplay muted loop playsinline preload="auto" poster="assets/hero-ue5-poster.jpg?v=2" aria-hidden="true"></video>
+  <script>
+    // sharper 1080p loop for larger screens, the lighter 720p one for phones
+    (function(v){ v.src = 'assets/' + (innerWidth > 760 ? 'hero-ue5-1080.mp4?v=2' : 'hero-ue5-720.mp4'); })(document.getElementById('hero-video'));
+  </script>
+  <div class="tint"></div><div class="grid"></div><div class="shade"></div>
+  <div class="hud tl" aria-hidden="true">Sys/portfolio v2.0<br>Node: Ahmedabad, IN<br>Render: UE5 Lumen</div>
+  <div class="hud tr" aria-hidden="true">23.0225° N<br>72.5714° E<br><b>Signal locked</b></div>
+  <div class="title">
+    <div class="kana" aria-hidden="true">３Ｄアーティスト</div>
+    <h1 class="glitch" data-text="Havya Pandya">Havya Pandya</h1>
+    <p class="role"><span class="mono">&gt;</span> 3D artist for games, products and architecture<span class="caret" aria-hidden="true"></span></p>
+    <div class="meta">
+      <a class="btn" href="#reel">Enter the work</a>
+      <span>4+ yrs · Blender · Maya · UE5</span>
+      <a href="mailto:havyapandya4@gmail.com">havyapandya4@gmail.com</a>
+    </div>
+  </div>
+</section>
+
+<main>
+<section class="reel" id="reel" aria-label="Selected work">
+  <div class="stage">
+    <div class="track" tabindex="0" aria-roledescription="carousel"></div>
+    <button class="reel-nav prev" id="reel-prev" aria-label="Previous project">&lt;</button>
+    <button class="reel-nav next" id="reel-next" aria-label="Next project">&gt;</button>
+    <a class="skipwork" href="#model">Skip past the work ↓</a>
+    <div class="playhead" aria-hidden="true"><b></b></div>
+    <nav class="timeline" aria-label="Jump to a project"></nav>
+  </div>
+</section>
+
+<section class="model" id="model" aria-labelledby="model-h">
+  <div class="head">
+    <div>
+      <h2 id="model-h" class="page-h"><span class="mono">// live model</span>Porsche 911, in your browser</h2>
+      <p class="lede">The real production mesh and Substance Painter textures. Drag to orbit, scroll or pinch to zoom, and switch views to see how it's built.</p>
+    </div>
+  </div>
+  <div class="viewport" id="viewport">
+    <div class="vp-hud stats" aria-hidden="true">
+      Tris <b id="st-tris">198,170</b><br>Materials <b>7</b><br>Textures <b>PBR, Substance Painter</b><br>Mode <b id="st-mode">Textured</b>
+    </div>
+    <div class="modes" role="group" aria-label="View mode">
+      <button class="mode" data-mode="textured" aria-pressed="true">Textured</button>
+      <button class="mode" data-mode="clay" aria-pressed="false">Clay</button>
+      <button class="mode" data-mode="wire" aria-pressed="false">Wireframe</button>
+      <button class="mode" id="spin" aria-pressed="true">Turntable</button>
+      <button class="mode" id="reset" aria-pressed="false">Reset view</button>
+    </div>
+    <div class="vp-hud tip" aria-hidden="true">Drag to orbit · Scroll to zoom · Right-drag to pan</div>
+    <div class="loading" id="vp-loading"><span id="vp-label">Model loads when you reach it</span><div class="meter"><b id="vp-meter"></b></div></div>
+  </div>
+</section>
+
+<section class="page" id="outtakes" aria-labelledby="outtakes-h">
+  <h2 id="outtakes-h"><span class="mono">// archive</span>Side files</h2>
+  <p class="lede">Model sheets and studies outside the main reel.</p>
+  <div class="sheet"></div>
+</section>
+
+<section class="page" id="credits" aria-labelledby="credits-h">
+  <h2 id="credits-h"><span class="mono">// profile</span>Who's behind the renders</h2>
+  <div class="term" role="region" aria-label="Profile">
+    <div class="bar"><span>havya</span><span>profile.sh</span></div>
+    <div class="body">
+      <div class="cmd">whoami</div>
+      <div class="out">Havya Pandya. 3D artist, Ahmedabad, Gujarat, India.</div>
+      <div class="cmd">cat skills.txt</div>
+      <div class="out">Modeling, PBR texturing, UV unwrapping, lighting, rendering</div>
+      <div class="cmd">ls ~/tools</div>
+      <div class="out">Blender / Maya / 3ds Max / ZBrush / Substance Painter / Marmoset Toolbag / Unreal Engine 5 / Unity</div>
+      <div class="cmd">cat shipped.log</div>
+      <div class="out"><em>Color Drop</em>, Android, Google Play. Sole 3D artist.</div>
+      <div class="cmd">cat awards.log</div>
+      <div class="out"><em>Best Project Award</em>, Gujarat University campus walkthrough</div>
+      <div class="cmd">cat education.txt</div>
+      <div class="out">M.Sc. Animation, Gujarat University, 2024–2026<br>B.Sc. Animation, Gujarat University, 2021–2024, CGPA 9.0/10</div>
+      <div class="cmd">cat about.md</div>
+      <div class="out">Four years of game-ready assets, photoreal product renders and architectural walkthroughs for coursework, freelance clients and a published game. Currently going deep on real-time rendering with Lumen and Nanite in Unreal Engine 5.</div>
+      <div id="term-log" aria-live="polite"><div class="out" style="margin-top:18px;color:var(--volt)">This terminal is live. Type <em>help</em> to see what you can ask, or tap a command below.</div></div>
+      <form id="term-form" autocomplete="off">
+        <label for="term-in">havya:~$ </label>
+        <input id="term-in" spellcheck="false" autocapitalize="off" aria-label="Type a command, for example help">
+      </form>
+    </div>
+  </div>
+  <div class="chips" aria-label="Quick commands">
+    <button class="chip" data-cmd="help">help</button>
+    <button class="chip" data-cmd="projects">projects</button>
+    <button class="chip" data-cmd="open 1">open 1</button>
+    <button class="chip" data-cmd="wireframe">wireframe</button>
+    <button class="chip" data-cmd="skills">skills</button>
+    <button class="chip" data-cmd="hire">hire</button>
+  </div>
+</section>
+
+<section class="page contact" id="contact" aria-labelledby="contact-h">
+  <h2 id="contact-h"><span class="mono">// connect</span>Get in contact</h2>
+  <p class="lede">Open to full-time, freelance and remote work in game art, VFX and archviz.</p>
+  <div class="reach">
+    <a class="big" href="mailto:havyapandya4@gmail.com">havyapandya4@gmail.com</a>
+    <a class="big phone" href="tel:+919879814973">+91 98798 14973</a>
+  </div>
+  <div class="links">
+    <a class="btn ghost" href="https://www.artstation.com/havyapandya5" target="_blank" rel="noopener">ArtStation</a>
+    <a class="btn ghost" href="https://linkedin.com/in/havyapandya" target="_blank" rel="noopener">LinkedIn</a>
+    <a class="btn ghost" href="https://youtube.com/@havyapandya3072" target="_blank" rel="noopener">YouTube</a>
+    <a class="btn ghost" href="https://play.google.com/store/apps/details?id=com.shinigamistudios.colordrop" target="_blank" rel="noopener">Color Drop</a>
+  </div>
+  <div class="foot"><span>© 2026 Havya Pandya</span><span title="Try it on a keyboard">↑↑↓↓←→←→BA</span><span>All renders by Havya Pandya</span></div>
+</section>
+</main>
+
+<dialog id="viewer" aria-labelledby="v-title">
+  <div class="v">
+    <header>
+      <div><h3 id="v-title"></h3><span class="count" id="v-count"></span></div>
+      <button class="close" id="v-close" aria-label="Close" title="Close (Esc)"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M3 3l12 12M15 3L3 15"/></svg></button>
+    </header>
+    <div class="frame" id="v-frame">
+      <button class="nav prev" id="v-prev" aria-label="Previous frame">&lt;</button>
+      <button class="nav next" id="v-next" aria-label="Next frame">&gt;</button>
+    </div>
+    <div class="thumbs" id="v-thumbs"></div>
+  </div>
+</dialog>
 
 <script>
-(function(){
-  // ---------------- HERO 3D VIEWPORT ----------------
-  const canvas = document.getElementById('hero-canvas');
-  const heroSection = canvas.parentElement;
-  const scene = new THREE.Scene();
+(() => {
+  const A = f => 'assets/' + f;
+  const SHOTS = [
+    { title:'Unreal Engine Environments', sector:'Real-time', tools:'UE5 · Lumen · Nanite',
+      line:'Real-time environments in Unreal Engine 5, lit with Lumen and built with Nanite geometry.',
+      cover:'unreal-engine-environments-2.jpg',
+      frames:['unreal-engine-environments-2.jpg','unreal-engine-environments-1.jpg','unreal-engine-environments-5.jpg','hero-ue5-1080.mp4','unreal-engine-environments-4.mp4'] },
+    { title:'Gujarat University Campus', sector:'Archviz', tools:'Architectural walkthrough',
+      line:'An architectural walkthrough of the campus, from the clock tower to the information centre.',
+      award:'★ Best Project Award', cover:'gujarat-university-campus-walkthrough-1.jpg',
+      frames:[1,2,3,4,5,6].map(n=>'gujarat-university-campus-walkthrough-'+n+'.jpg') },
+    { title:'Porsche 911 Study', sector:'Vehicle', tools:'Cinematic lighting',
+      line:'A vehicle study about cinematic lighting: fog, sodium lamps and headlight bloom.',
+      model:true, cover:'porsche-911-study-1.jpg', frames:['porsche-911-study-1.jpg','porsche-911-study-2.jpg'] },
+    { title:'Samurai Armor', sector:'Character', tools:'Hard surface',
+      line:'Hard-surface character armor and katana, lit low and cold.',
+      cover:'sci-fi-armor-suit-2.jpg', frames:['sci-fi-armor-suit-2.jpg','sci-fi-armor-suit-1.jpg','samurai-1.jpg'] },
+    { title:'Sci-Fi Helmet', sector:'Hard surface', tools:'Product render',
+      line:'A hard-surface helmet presented as a clean studio product render.',
+      cover:'sci-fi-helmet-1.jpg', frames:['sci-fi-helmet-1.jpg','sci-fi-helmet-2.jpg'] },
+    { title:'Smartwatch', sector:'Product viz', tools:'Photoreal',
+      line:'Photoreal consumer-product visualization with metal, glass and foliage.',
+      cover:'smartwatch-1.jpg', frames:['smartwatch-1.jpg','smartwatch-2.jpg'] },
+    { title:'Console Controller', sector:'Product viz', tools:'Photoreal',
+      line:'A photoreal controller and console set in a lived-in interior.',
+      cover:'console-controller-1.jpg', frames:['console-controller-1.jpg','console-controller-2.jpg'] },
+    { title:'Katana', sector:'Game prop', tools:'Game-ready',
+      line:'A game-ready prop: blade, handle wrap and lacquered scabbard.',
+      cover:'katana-2.jpg', frames:['katana-2.jpg','katana-1.jpg'] },
+    { title:'Vintage Radio', sector:'Product', tools:'Clay model sheets',
+      line:'Product modeling shown as clay model sheets from every side.',
+      cover:'vintage-radio-1.jpg', frames:[1,2,3,4,5].map(n=>'vintage-radio-'+n+'.jpg') },
+  ];
+  const OUTTAKES = [
+    { title:'Robot Study', line:'character_model_sheet.jpg', cover:'robot-study-1.jpg', frames:['robot-study-1.jpg'] },
+    { title:'Walkie-Talkie', line:'product_model_sheet.jpg', cover:'walkie-talkie-1.jpg', frames:['walkie-talkie-1.jpg'] },
+    { title:'Upasna', line:'architectural_render.jpg', cover:'upasna-1.jpg', frames:['upasna-1.jpg'] },
+  ];
+  const isVideo = f => /\.mp4$/i.test(f);
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  const pad = k => String(k).padStart(2,'0');
+  const n = SHOTS.length;
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fine = matchMedia('(pointer: fine)').matches;
 
-  function getSize(){ return { w: heroSection.clientWidth, h: heroSection.clientHeight }; }
-  let { w, h } = getSize();
-
-  const camera = new THREE.PerspectiveCamera(45, w/h, 0.1, 100);
-  camera.position.set(0, 0, 6.2);
-
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(w, h);
-
-  // lights — two-tone, echoing the palette
-  const ambient = new THREE.AmbientLight(0x2a2d33, 1.4);
-  scene.add(ambient);
-  const keyLight = new THREE.DirectionalLight(0x4d8dff, 2.0);
-  keyLight.position.set(4, 5, 6);
-  scene.add(keyLight);
-  const rimLight = new THREE.DirectionalLight(0xffb454, 1.1);
-  rimLight.position.set(-5, -3, -4);
-  scene.add(rimLight);
-
-  // ---- HERO MODEL (swap this block for a GLTFLoader call to use your own .glb) ----
-  const geometry = new THREE.IcosahedronGeometry(1.9, 1);
-  const material = new THREE.MeshStandardMaterial({
-    color: 0x4d8dff, flatShading: true, metalness: 0.15, roughness: 0.45,
-    wireframe: false
-  });
-  const mesh = new THREE.Mesh(geometry, material);
-  scene.add(mesh);
-
-  const wireGeo = new THREE.EdgesGeometry(geometry);
-  const wireMat = new THREE.LineBasicMaterial({ color: 0xeef0ef, transparent:true, opacity:0.12 });
-  const wireframeOverlay = new THREE.LineSegments(wireGeo, wireMat);
-  mesh.add(wireframeOverlay);
-  // ---- end HERO MODEL block ----
-
-  // pointer-driven orbit (manual, no external addon needed)
-  let dragging = false, lastX = 0, lastY = 0;
-  let rotY = 0.4, rotX = 0.2;
-  let autoSpin = true;
-
-  canvas.addEventListener('pointerdown', (e) => {
-    dragging = true; autoSpin = false; lastX = e.clientX; lastY = e.clientY;
-  });
-  window.addEventListener('pointerup', () => { dragging = false; });
-  window.addEventListener('pointermove', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1;
-    const hud = document.getElementById('hud-coords');
-    if (e.clientY < rect.bottom && e.clientY > rect.top) {
-      hud.innerHTML = 'X <b>' + nx.toFixed(2) + '</b><br>Y <b>' + (-ny).toFixed(2) + '</b>';
-    }
-    if (dragging) {
-      const dx = e.clientX - lastX, dy = e.clientY - lastY;
-      rotY += dx * 0.006;
-      rotX += dy * 0.006;
-      lastX = e.clientX; lastY = e.clientY;
-    }
-  });
-
-  // wireframe / shaded toggle
-  const toggle = document.getElementById('render-toggle');
-  const toggleLabel = document.getElementById('render-toggle-label');
-  let wireframeMode = false;
-  toggle.addEventListener('click', () => {
-    wireframeMode = !wireframeMode;
-    material.wireframe = wireframeMode;
-    wireMat.opacity = wireframeMode ? 0 : 0.12;
-    toggleLabel.textContent = wireframeMode ? 'wireframe' : 'shaded';
-  });
-
-  function animate(){
-    requestAnimationFrame(animate);
-    if (autoSpin) rotY += 0.0022;
-    mesh.rotation.y += (rotY - mesh.rotation.y) * 0.08;
-    mesh.rotation.x += (rotX - mesh.rotation.x) * 0.08;
-    renderer.render(scene, camera);
+  // decrypt effect: characters resolve from noise into the real title
+  const GLYPHS = '!<>-_\\/[]{}=+*^?#01アイウエオカキクケコ';
+  function decrypt(el){
+    const target = el.dataset.text;
+    if (calm) { el.textContent = target; return; }
+    let frame = 0; const total = 22;
+    cancelAnimationFrame(el._raf);
+    const tick = () => {
+      const done = Math.floor(target.length * frame / total);
+      el.textContent = target.split('').map((c, i) =>
+        i < done || c === ' ' ? c : GLYPHS[Math.floor(Math.random() * GLYPHS.length)]).join('');
+      if (++frame <= total) el._raf = requestAnimationFrame(tick); else el.textContent = target;
+    };
+    tick();
   }
-  animate();
 
-  window.addEventListener('resize', () => {
-    const s = getSize();
-    camera.aspect = s.w / s.h;
-    camera.updateProjectionMatrix();
-    renderer.setSize(s.w, s.h);
+  // ----- build the reel -----
+  const reel = document.getElementById('reel');
+  const track = reel.querySelector('.track');
+  const timeline = reel.querySelector('.timeline');
+  SHOTS.forEach((s, i) => {
+    const count = s.frames.length;
+    const art = document.createElement('article');
+    art.className = 'shot'; art.id = 'shot-' + (i+1); art.setAttribute('aria-label', `${s.title}, ${i+1} of ${n}`);
+    art.innerHTML = `
+      <img src="${A(s.cover)}" alt="${esc(s.title)} render" ${i > 1 ? 'loading="lazy"' : ''}>
+      <button class="hit" aria-label="Open ${esc(s.title)}, ${count} files" data-i="${i}"></button>
+      <div class="frame-hud" aria-hidden="true"></div>
+      <div class="readout" aria-hidden="true"><span class="rec">Rec</span><br>Sector: ${esc(s.sector)}<br>${esc(s.tools)}<br>Files: ${pad(count)}${fine ? '<br><span class="hint">Hover to scan</span>' : ''}</div>
+      <div class="slate">
+        <div class="no">File ${pad(i+1)} / ${pad(n)}</div>
+        <h2 data-text="${esc(s.title)}">${esc(s.title)}</h2>
+        <p>${esc(s.line)}</p>
+        ${s.award ? `<div class="award">${s.award}</div>` : ''}
+        <div class="frames"><button class="btn" data-i="${i}">Open ${count} ${count === 1 ? 'file' : 'files'}</button>${s.model ? ' <a class="btn ghost" href="#model">Spin it in 3D</a>' : ''}</div>
+      </div>`;
+    track.appendChild(art);
+    const t = document.createElement('a');
+    t.href = '#shot-' + (i+1); t.dataset.go = i;
+    t.innerHTML = `<img src="${A(s.cover)}" alt="" loading="lazy"><span>${pad(i+1)} ${esc(s.title)}</span>`;
+    t.setAttribute('aria-label', s.title);
+    timeline.appendChild(t);
+  });
+  track.addEventListener('click', e => {
+    const b = e.target.closest('[data-i]'); if (b) openViewer(SHOTS[+b.dataset.i]);
   });
 
-  // ---------------- WORK CARD TILT ----------------
-  const cards = document.querySelectorAll('.work-card');
-  cards.forEach(card => {
-    card.addEventListener('mousemove', (e) => {
-      const rect = card.getBoundingClientRect();
-      const px = (e.clientX - rect.left) / rect.width - 0.5;
-      const py = (e.clientY - rect.top) / rect.height - 0.5;
-      card.style.transform = `perspective(900px) rotateX(${(-py*10).toFixed(2)}deg) rotateY(${(px*10).toFixed(2)}deg) translateZ(6px)`;
-    });
-    card.addEventListener('mouseleave', () => {
-      card.style.transform = 'perspective(900px) rotateX(0deg) rotateY(0deg) translateZ(0px)';
-    });
+  // ----- side files -----
+  const sheet = document.querySelector('.sheet');
+  OUTTAKES.forEach(o => {
+    const b = document.createElement('button');
+    b.innerHTML = `<figure><img src="${A(o.cover)}" alt="${esc(o.title)}" loading="lazy"></figure>
+      <figcaption>${esc(o.title)}<em>${esc(o.line)}</em></figcaption>`;
+    b.addEventListener('click', () => openViewer(o));
+    sheet.appendChild(b);
   });
 
-  // ---------------- LIGHTBOX ----------------
-  const lightbox = document.getElementById('lightbox');
-  const lbMediaWrap = document.getElementById('lb-media-wrap');
-  const lbTitle = document.getElementById('lb-title');
-  const lbTag = document.getElementById('lb-tag');
-  const lbCounter = document.getElementById('lb-counter');
-  let currentImages = [], currentIndex = 0, currentTitle = '', currentTag = '';
-
-  function openLightbox(images, title, tag, startIndex){
-    currentImages = images; currentTitle = title; currentTag = tag; currentIndex = startIndex || 0;
-    renderLightbox();
-    lightbox.classList.add('open');
+  // ----- one-screen gallery: projects move sideways, the page scrolls past in one go -----
+  const shots = [...track.children];
+  const thumbs = [...timeline.children];
+  const bar = reel.querySelector('.playhead b');
+  const prevB = document.getElementById('reel-prev'), nextB = document.getElementById('reel-next');
+  const wide = matchMedia('(min-width: 761px)');
+  let current = -1, ticking = false;
+  function activate(idx){
+    if (!shots[idx]) return;
+    current = idx;
+    shots.forEach((s, k) => s.classList.toggle('on', k === idx));
+    thumbs.forEach((t, k) => t.setAttribute('aria-current', k === idx ? 'true' : 'false'));
+    prevB.disabled = idx === 0; nextB.disabled = idx === n - 1;
+    decrypt(shots[idx].querySelector('h2'));
   }
-  function isVideo(src){ return /\.mp4($|\?)/i.test(src) || src.startsWith('data:video'); }
-  function renderLightbox(){
-    const src = currentImages[currentIndex];
-    lbMediaWrap.innerHTML = '';
-    if (isVideo(src)) {
-      const video = document.createElement('video');
-      video.src = src; video.controls = true; video.autoplay = true;
-      video.loop = true; video.muted = true; video.playsInline = true;
-      lbMediaWrap.appendChild(video);
+  function goTo(i){
+    i = Math.max(0, Math.min(n - 1, i));
+    track.scrollTo({ left: i * track.clientWidth, behavior: calm ? 'auto' : 'smooth' });
+  }
+  function update(){
+    ticking = false;
+    const max = track.scrollWidth - track.clientWidth;
+    bar.style.width = (max > 0 ? track.scrollLeft / max * 100 : 0) + '%';
+    const w = track.clientWidth;
+    const idx = w ? Math.max(0, Math.min(n - 1, Math.round(track.scrollLeft / w))) : 0;
+    if (idx !== current) activate(idx);
+  }
+  const req = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+  track.addEventListener('scroll', req, { passive:true });
+  addEventListener('resize', () => { if (current >= 0) track.scrollLeft = current * track.clientWidth; req(); });
+  activate(0); track.scrollLeft = 0;
+  addEventListener('load', req);
+  prevB.addEventListener('click', () => goTo(current - 1));
+  nextB.addEventListener('click', () => goTo(current + 1));
+  timeline.addEventListener('click', e => { const a = e.target.closest('[data-go]'); if (a) { e.preventDefault(); goTo(+a.dataset.go); } });
+
+  // arrow keys step between projects while the gallery is mostly on screen
+  addEventListener('keydown', e => {
+    if (viewer.open || e.target.matches('input, textarea')) return;
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    const r = reel.getBoundingClientRect();
+    if (r.top > innerHeight * .4 || r.bottom < innerHeight * .6) return;
+    e.preventDefault(); goTo(current + (e.key === 'ArrowRight' ? 1 : -1));
+  });
+
+  // links to #shot-N open that project in the gallery
+  function shotFromHash(){ const m = /^#shot-(\d+)$/.exec(location.hash); if (m) { reel.scrollIntoView(); goTo(+m[1] - 1); return true; } return false; }
+
+  // ----- viewer -----
+  const viewer = document.getElementById('viewer');
+  const vFrame = document.getElementById('v-frame');
+  const vThumbs = document.getElementById('v-thumbs');
+  const vTitle = document.getElementById('v-title');
+  const vCount = document.getElementById('v-count');
+  const vPrev = document.getElementById('v-prev'), vNext = document.getElementById('v-next');
+  let set = null, at = 0;
+  function openViewer(s){
+    set = s; at = 0;
+    vTitle.dataset.text = s.title; vTitle.textContent = s.title;
+    vThumbs.innerHTML = '';
+    s.frames.forEach((f, k) => {
+      const b = document.createElement('button');
+      b.setAttribute('aria-label', 'File ' + (k+1));
+      b.innerHTML = isVideo(f) ? `<span class="play">▶ Video</span>` : `<img src="${A(f)}" alt="">`;
+      b.addEventListener('click', () => show(k));
+      vThumbs.appendChild(b);
+    });
+    const many = s.frames.length > 1;
+    vPrev.hidden = vNext.hidden = vThumbs.hidden = !many;
+    show(0);
+    viewer.showModal();
+    decrypt(vTitle);
+  }
+  function show(k){
+    at = (k + set.frames.length) % set.frames.length;
+    vFrame.querySelectorAll('img,video').forEach(el => el.remove());
+    const f = set.frames[at];
+    let el;
+    if (isVideo(f)) {
+      el = document.createElement('video');
+      Object.assign(el, { src:A(f), controls:true, autoplay:true, muted:true, loop:true, playsInline:true });
     } else {
-      const img = document.createElement('img');
-      img.src = src; img.alt = currentTitle;
-      lbMediaWrap.appendChild(img);
+      el = document.createElement('img');
+      el.src = A(f); el.alt = set.title + ', file ' + (at+1);
     }
-    lbTitle.textContent = currentTitle;
-    lbTag.textContent = currentTag;
-    lbCounter.textContent = (currentIndex+1) + ' / ' + currentImages.length;
+    vFrame.prepend(el);
+    vCount.textContent = '[' + pad(at+1) + '/' + pad(set.frames.length) + ']';
+    [...vThumbs.children].forEach((b, i) => b.setAttribute('aria-current', i === at ? 'true' : 'false'));
   }
-  function closeLightbox(){ lightbox.classList.remove('open'); lbMediaWrap.innerHTML = ''; }
-  function nextImage(){ currentIndex = (currentIndex+1) % currentImages.length; renderLightbox(); }
-  function prevImage(){ currentIndex = (currentIndex-1+currentImages.length) % currentImages.length; renderLightbox(); }
-
-  cards.forEach(card => {
-    card.addEventListener('click', () => {
-      const images = JSON.parse(card.getAttribute('data-images') || '[]');
-      const title = card.getAttribute('data-title') || '';
-      const tag = card.getAttribute('data-tag') || '';
-      if (images.length) openLightbox(images, title, tag, 0);
-    });
+  vPrev.addEventListener('click', () => show(at - 1));
+  vNext.addEventListener('click', () => show(at + 1));
+  document.getElementById('v-close').addEventListener('click', () => viewer.close());
+  viewer.addEventListener('close', () => vFrame.querySelectorAll('video').forEach(v => v.pause()));
+  viewer.addEventListener('click', e => { if (e.target === vFrame) viewer.close(); });
+  viewer.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') show(at + 1);
+    if (e.key === 'ArrowLeft') show(at - 1);
   });
+  // ===== interactive layer =====
+  const root = document.documentElement;
 
-  document.getElementById('lb-close').addEventListener('click', closeLightbox);
-  document.getElementById('lb-next').addEventListener('click', nextImage);
-  document.getElementById('lb-prev').addEventListener('click', prevImage);
-  lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
-  window.addEventListener('keydown', (e) => {
-    if (!lightbox.classList.contains('open')) return;
-    if (e.key === 'Escape') closeLightbox();
-    if (e.key === 'ArrowRight') nextImage();
-    if (e.key === 'ArrowLeft') prevImage();
+  // boot sequence, once per browser session
+  // the reel's height is set by script, so jump to a #section once the layout is final
+  function jumpToHash(){ if (shotFromHash()) return; const t = location.hash && document.getElementById(location.hash.slice(1)); if (t) requestAnimationFrame(() => t.scrollIntoView()); }
+  const boot = document.getElementById('boot');
+  let booted = false;
+  try { booted = sessionStorage.getItem('booted') === '1'; } catch (e) {}
+  if (calm || booted) { boot.remove(); jumpToHash(); }
+  else {
+    root.classList.add('booting');
+    const BOOT = [
+      ['> BOOT havya.os v2.0', ''],
+      ['> Mounting /renders .............. 32 files', ''],
+      ['> Compiling Unreal Engine 5 shaders ...... OK', 'ok'],
+      ['> Calibrating Lumen global illumination .. OK', 'ok'],
+      ['> Decrypting portfolio ................... OK', 'ok'],
+      ['> Access granted. Welcome, visitor.', 'ok'],
+    ];
+    const linesEl = document.getElementById('boot-lines'), meter = document.getElementById('boot-meter');
+    let li = 0, timer;
+    const finish = () => {
+      clearTimeout(timer);
+      boot.classList.add('gone'); root.classList.remove('booting');
+      try { sessionStorage.setItem('booted', '1'); } catch (e) {}
+      ['keydown','pointerdown'].forEach(ev => removeEventListener(ev, finish));
+      setTimeout(() => boot.remove(), 600);
+      jumpToHash();
+    };
+    const step = () => {
+      if (li < BOOT.length) {
+        const d = document.createElement('div');
+        d.textContent = BOOT[li][0]; d.className = BOOT[li][1];
+        linesEl.appendChild(d); li++;
+        meter.style.width = (li / BOOT.length * 100) + '%';
+        timer = setTimeout(step, li === BOOT.length ? 650 : 260);
+      } else finish();
+    };
+    step();
+    ['keydown','pointerdown'].forEach(ev => addEventListener(ev, finish));
+  }
+
+  // toast
+  const toastEl = document.getElementById('toast'); let toastT;
+  function toast(msg){ toastEl.textContent = msg; toastEl.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove('show'), 2200); }
+
+  if (fine && !calm) {
+    // targeting reticle
+    const ret = document.getElementById('reticle');
+    addEventListener('mousemove', e => {
+      ret.style.transform = `translate3d(${e.clientX}px,${e.clientY}px,0)`;
+      ret.style.opacity = 1;
+      ret.classList.toggle('lock', !!e.target.closest('a, button:not(.hit), input, .chip'));
+    }, { passive:true });
+    document.addEventListener('mouseleave', () => ret.style.opacity = 0);
+
+    // hero parallax
+    const open = document.querySelector('.open');
+    const media = open.querySelectorAll('video, .poster');
+    const title = open.querySelector('.title');
+    open.addEventListener('mousemove', e => {
+      const px = e.clientX / innerWidth - .5, py = e.clientY / innerHeight - .5;
+      media.forEach(m => m.style.transform = `scale(1.02) translate(${-px * 10}px, ${-py * 7}px)`);
+      title.style.transform = `translate(${px * 12}px, ${py * 8}px)`;
+    });
+    open.addEventListener('mouseleave', () => { media.forEach(m => m.style.transform = ''); title.style.transform = ''; });
+  }
+
+  if (fine) {
+    // scan lens over each project render
+    shots.forEach(s => {
+      const lens = document.createElement('div'); lens.className = 'lens'; lens.setAttribute('aria-hidden', 'true');
+      const img = s.querySelector('img').cloneNode(); img.alt = ''; img.removeAttribute('loading');
+      lens.appendChild(img);
+      const ring = document.createElement('div'); ring.className = 'ring'; ring.setAttribute('aria-hidden', 'true');
+      const label = document.createElement('span'); ring.appendChild(label);
+      s.querySelector('.hit').after(lens, ring);
+      s.addEventListener('mousemove', e => {
+        if (e.target.closest('.slate')) { s.classList.remove('scanning'); return; }
+        const r = s.getBoundingClientRect();
+        const x = Math.round(e.clientX - r.left), y = Math.round(e.clientY - r.top);
+        s.style.setProperty('--x', x + 'px'); s.style.setProperty('--y', y + 'px');
+        label.textContent = `Scan  X:${String(x).padStart(4,'0')}  Y:${String(y).padStart(4,'0')}`;
+        s.classList.add('scanning');
+      });
+      s.addEventListener('mouseleave', () => s.classList.remove('scanning'));
+    });
+  }
+
+  // live terminal
+  const termLog = document.getElementById('term-log');
+  const termBody = termLog.parentElement;
+  const termForm = document.getElementById('term-form');
+  const termIn = document.getElementById('term-in');
+  const EMAIL = 'havyapandya4@gmail.com';
+  const mail = `<a href="mailto:${EMAIL}">${EMAIL}</a>`;
+  const phone = '<a href="tel:+919879814973">+91 98798 14973</a>';
+  const ALL = SHOTS.concat(OUTTAKES);
+  const line = (html, cls = 'out') => { const d = document.createElement('div'); d.className = cls; d.innerHTML = html; termLog.appendChild(d); };
+  const TEXT = {
+    whoami: 'Havya Pandya. 3D artist, Ahmedabad, Gujarat, India.',
+    skills: 'Modeling, PBR texturing, UV unwrapping, lighting, rendering',
+    tools: 'Blender / Maya / 3ds Max / ZBrush / Substance Painter / Marmoset Toolbag / Unreal Engine 5 / Unity',
+    shipped: '<em>Color Drop</em>, Android, Google Play. Sole 3D artist. <a href="https://play.google.com/store/apps/details?id=com.shinigamistudios.colordrop" target="_blank" rel="noopener">Open on Google Play</a>',
+    awards: '<em>Best Project Award</em>, Gujarat University campus walkthrough. Type <em>open campus</em> to see it.',
+    education: 'M.Sc. Animation, Gujarat University, 2024–2026<br>B.Sc. Animation, Gujarat University, 2021–2024, CGPA 9.0/10',
+    about: 'Four years of game-ready assets, photoreal product renders and architectural walkthroughs. Currently going deep on Lumen and Nanite in Unreal Engine 5.',
+    socials: '<a href="https://www.artstation.com/havyapandya5" target="_blank" rel="noopener">ArtStation</a>  <a href="https://linkedin.com/in/havyapandya" target="_blank" rel="noopener">LinkedIn</a>  <a href="https://youtube.com/@havyapandya3072" target="_blank" rel="noopener">YouTube</a>',
+    contact: 'Email ' + mail + ' or call ' + phone + '. Open to full-time, freelance and remote work.',
+  };
+  const ALIAS = { 'skills.txt':'skills', '~/tools':'tools', 'shipped.log':'shipped', 'awards.log':'awards', 'education.txt':'education', 'about.md':'about', links:'socials', email:'contact', phone:'contact', call:'contact', resume:'education' };
+  function run(raw){
+    const cmd = raw.trim(); if (!cmd) return;
+    const cl = document.createElement('div'); cl.className = 'cmd'; cl.textContent = cmd; termLog.appendChild(cl);
+    let [name, ...rest] = cmd.toLowerCase().split(/\s+/); const arg = rest.join(' ');
+    if (name === 'cat' || name === 'ls' && arg) { name = ALIAS[arg] || arg; }
+    name = ALIAS[name] || name;
+    if (TEXT[name]) line(TEXT[name]);
+    else if (name === 'help') line(
+      '<em>projects</em> list the work&nbsp;&nbsp; <em>open &lt;number or name&gt;</em> view a project<br>' +
+      '<em>model</em> jump to the 3D Porsche&nbsp;&nbsp; <em>wireframe</em> <em>clay</em> <em>textured</em><br>' +
+      '<em>whoami</em> <em>skills</em> <em>tools</em> <em>shipped</em> <em>awards</em> <em>education</em> <em>about</em><br>' +
+      '<em>socials</em> <em>contact</em> <em>hire</em> <em>clear</em><br>There may be a few hidden ones.');
+    else if (name === 'projects') line(SHOTS.map((s, i) => `${pad(i+1)}&nbsp; ${esc(s.title)}`).join('<br>') + '<br>Type <em>open 3</em> or <em>open porsche</em>.');
+    else if (name === 'open' || name === 'view') {
+      const k = parseInt(arg, 10);
+      const hit = arg ? (k >= 1 && k <= SHOTS.length ? SHOTS[k-1] : ALL.find(s => s.title.toLowerCase().includes(arg))) : null;
+      if (hit) { line('Opening ' + esc(hit.title) + '…'); setTimeout(() => openViewer(hit), 250); }
+      else line('No project matches "' + esc(arg) + '". Type <em>projects</em> for the list.', 'err');
+    }
+    else if (name === 'model' || name === 'spin' || name === '3d') { line('Jumping to the live Porsche model. Try <em>wireframe</em> or <em>clay</em>.'); document.getElementById('model').scrollIntoView({ behavior: calm ? 'auto' : 'smooth' }); }
+    else if (name === 'wireframe' || name === 'wire' || name === 'clay' || name === 'textured') { const md = name.startsWith('wire') ? 'wire' : name; dispatchEvent(new CustomEvent('model:mode', { detail: md })); line('Model view set to ' + md + '.'); document.getElementById('model').scrollIntoView({ behavior: calm ? 'auto' : 'smooth' }); }
+    else if (name === 'hire') line('Good call. Reach Havya at ' + mail + ' or ' + phone + '. Available for full-time, freelance and remote roles in game art, VFX and archviz.');
+    else if (name === 'ls') line('renders/&nbsp; tools/&nbsp; shipped.log&nbsp; awards.log&nbsp; education.txt&nbsp; about.md');
+    else if (name === 'clear') termLog.innerHTML = '';
+    else if (name === 'date') line(esc(new Date().toString()));
+    else if (name === 'sudo') line('Permission denied. Root access is reserved for recruiters. Try <em>hire</em>.', 'err');
+    else if (name === 'overdrive' || name === 'glitch') toggleOverdrive();
+    else if (name === 'rm') line('Nice try. These renders took weeks.', 'err');
+    else if (name === 'hello' || name === 'hi') line('Hey. Type <em>help</em> to look around.');
+    else line('command not found: ' + esc(name) + '. Type <em>help</em>.', 'err');
+    termBody.scrollTop = termBody.scrollHeight;
+  }
+  const hist = []; let hp = 0;
+  termForm.addEventListener('submit', e => { e.preventDefault(); const v = termIn.value; if (v.trim()) { hist.push(v); hp = hist.length; } run(v); termIn.value = ''; });
+  termIn.addEventListener('keydown', e => {
+    if (e.key === 'ArrowUp' && hp > 0) { e.preventDefault(); termIn.value = hist[--hp]; }
+    if (e.key === 'ArrowDown') { e.preventDefault(); hp = Math.min(hist.length, hp + 1); termIn.value = hist[hp] || ''; }
+  });
+  document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => run(c.dataset.cmd)));
+
+  // easter egg: the Konami code toggles overdrive
+  function toggleOverdrive(){
+    const on = root.classList.toggle('overdrive');
+    toast(on ? 'Overdrive enabled' : 'Overdrive off');
+    if (termLog) line(on ? 'Overdrive enabled. Type <em>overdrive</em> again to cool down.' : 'Overdrive off.');
+  }
+  const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+  let ki = 0;
+  addEventListener('keydown', e => {
+    if (e.target.matches('input, textarea')) return;
+    const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    ki = key === KONAMI[ki] ? ki + 1 : (key === KONAMI[0] ? 1 : 0);
+    if (ki === KONAMI.length) { ki = 0; toggleOverdrive(); }
   });
 })();
 </script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+const vp = document.getElementById('viewport');
+const label = document.getElementById('vp-label'), meter = document.getElementById('vp-meter'), loading = document.getElementById('vp-loading');
+const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let pending = null;
+addEventListener('model:mode', e => { pending = e.detail; if (window.__setMode) window.__setMode(e.detail); });
 
+async function start(){
+  label.textContent = 'Decrypting mesh…';
+  let THREE, GLTFLoader, OrbitControls, RoomEnvironment, MeshoptDecoder;
+  try {
+    THREE = await import('three');
+    ({ GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js'));
+    ({ OrbitControls } = await import('three/addons/controls/OrbitControls.js'));
+    ({ RoomEnvironment } = await import('three/addons/environments/RoomEnvironment.js'));
+    ({ MeshoptDecoder } = await import('three/addons/libs/meshopt_decoder.module.js'));
+  } catch (e) { label.textContent = 'Could not load the 3D viewer. Check your connection and refresh.'; return; }
+
+  const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, powerPreference:'high-performance' });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  vp.prepend(renderer.domElement);
+  renderer.domElement.setAttribute('aria-label', '3D model of a Porsche 911. Drag to rotate, scroll to zoom.');
+  renderer.domElement.setAttribute('role', 'img');
+
+  const scene = new THREE.Scene();
+  let visible = true, needs = true;
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  scene.environmentIntensity = 0.9;
+
+  const camera = new THREE.PerspectiveCamera(32, 1, 0.05, 100);
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true; controls.dampingFactor = .08;
+  controls.minDistance = 3.2; controls.maxDistance = 16; controls.maxPolarAngle = Math.PI * 0.495;
+  controls.autoRotate = !calm; controls.autoRotateSpeed = 0.8;
+
+  // neon rig: cool key, pink and cyan rims
+  const key = new THREE.DirectionalLight(0xffffff, 1.6); key.position.set(4, 7, 5); key.castShadow = true;
+  key.shadow.mapSize.set(1024, 1024); Object.assign(key.shadow.camera, { left:-4, right:4, top:4, bottom:-4, near:1, far:20 }); key.shadow.bias = -0.0005;
+  const pink = new THREE.DirectionalLight(0xff2a6d, 2.2); pink.position.set(-6, 2, -3);
+  const cyan = new THREE.DirectionalLight(0x05d9e8, 2.0); cyan.position.set(6, 1.5, -5);
+  scene.add(key, pink, cyan, new THREE.HemisphereLight(0x8fa8ff, 0x0b0710, 0.35));
+
+  // floor: shadow catcher plus a neon grid
+  const shadow = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.ShadowMaterial({ opacity:.55 }));
+  shadow.rotation.x = -Math.PI / 2; shadow.receiveShadow = true; scene.add(shadow);
+  const grid = new THREE.GridHelper(24, 48, 0xff2a6d, 0x05d9e8);
+  grid.material.transparent = true; grid.material.opacity = .22; grid.position.y = 0.001; scene.add(grid);
+
+  const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
+  let gltf;
+  try {
+    gltf = await loader.loadAsync('assets/models/porsche-911.glb?v=5', ev => {
+      const mb = (ev.loaded / 1048576).toFixed(1);
+      const p = Math.min(1, ev.loaded / 3723824);
+      meter.style.width = (p * 100) + '%'; label.textContent = 'Loading model ' + mb + ' MB';
+    });
+  } catch (e) { label.textContent = 'The model failed to load. Refresh to try again.'; return; }
+
+  const car = gltf.scene;
+  const box = new THREE.Box3().setFromObject(car), size = box.getSize(new THREE.Vector3()), center = box.getCenter(new THREE.Vector3());
+  car.position.sub(new THREE.Vector3(center.x, box.min.y, center.z));
+  scene.add(car);
+
+  // remember each mesh's real materials so view modes can swap them
+  const meshes = []; let tris = 0;
+  car.traverse(o => {
+    if (!o.isMesh) return;
+    o.castShadow = true; o.receiveShadow = true;
+    o.userData.orig = o.material; meshes.push(o);
+    tris += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3;
+  });
+  document.getElementById('st-tris').textContent = Math.round(tris).toLocaleString('en-US');
+  const isGlass = m => m.name === 'Glass' || m.name === 'M_glass';
+  const clay = new THREE.MeshStandardMaterial({ color:0x7d838d, roughness:.72, metalness:0, envMapIntensity:.45 });
+  const clayGlass = new THREE.MeshStandardMaterial({ color:0x9aa3b0, roughness:.1, transparent:true, opacity:.35 });
+  const wire = new THREE.MeshBasicMaterial({ color:0x05d9e8, wireframe:true, transparent:true, opacity:.55 });
+  const wireFill = new THREE.MeshBasicMaterial({ color:0x07060b, polygonOffset:true, polygonOffsetFactor:1, polygonOffsetUnits:1 });
+  const wireOverlay = []; // second pass of wire lines over a dark fill
+  meshes.forEach(m => { const w = new THREE.Mesh(m.geometry, wire); w.visible = false; m.add(w); wireOverlay.push(w); });
+
+  const statMode = document.getElementById('st-mode');
+  const buttons = [...vp.querySelectorAll('.mode[data-mode]')];
+  function setMode(mode){
+    meshes.forEach(m => {
+      const o = m.userData.orig;
+      m.material = mode === 'clay' ? (isGlass(o) ? clayGlass : clay) : mode === 'wire' ? wireFill : o;
+      m.castShadow = mode !== 'wire';
+    });
+    wireOverlay.forEach(w => w.visible = mode === 'wire');
+    grid.material.opacity = mode === 'wire' ? .4 : .22;
+    buttons.forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === mode ? 'true' : 'false'));
+    statMode.textContent = { textured:'Textured', clay:'Clay', wire:'Wireframe' }[mode];
+    needs = true;
+  }
+  window.__setMode = setMode;
+  buttons.forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+
+  const spinBtn = document.getElementById('spin');
+  spinBtn.setAttribute('aria-pressed', String(controls.autoRotate));
+  spinBtn.addEventListener('click', () => { controls.autoRotate = !controls.autoRotate; spinBtn.setAttribute('aria-pressed', String(controls.autoRotate)); });
+  const home = () => {
+    const d = Math.max(size.x, size.z) * 1.22 * Math.max(1, 1.25 / camera.aspect);
+    camera.position.set(d * .62, size.y * 1.05, d * .78); controls.target.set(0, size.y * .38, 0); controls.update();
+  };
+  document.getElementById('reset').addEventListener('click', home);
+  let touched = false;
+
+  // pause the turntable while someone is handling the model, resume after a moment
+  let idle; controls.addEventListener('start', () => { touched = true; clearTimeout(idle); controls.autoRotate = false; });
+  controls.addEventListener('end', () => { clearTimeout(idle); if (spinBtn.getAttribute('aria-pressed') === 'true' && !calm) idle = setTimeout(() => controls.autoRotate = true, 3500); });
+
+  function resize(){ const w = vp.clientWidth, h = vp.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); if (!touched) home(); needs = true; }
+  new ResizeObserver(resize).observe(vp); resize();
+
+  // only render while the viewer is on screen
+  new IntersectionObserver(es => { visible = es[0].isIntersecting; }, { threshold:0 }).observe(vp);
+  controls.addEventListener('change', () => needs = true);
+  renderer.setAnimationLoop(() => {
+    if (!visible) return;
+    const moved = controls.update();
+    if (moved || needs || controls.autoRotate) { renderer.render(scene, camera); needs = false; }
+  });
+  if (pending) setMode(pending);
+  loading.classList.add('done');
+  window.__modelReady = true;
+}
+
+// load the model only when the visitor gets near it
+let started = false;
+const go = () => { if (!started) { started = true; start(); } };
+new IntersectionObserver(es => { if (es[0].isIntersecting) go(); }, { rootMargin:'600px 0px' }).observe(vp);
+addEventListener('model:mode', go);
+</script>
 </body>
 </html>

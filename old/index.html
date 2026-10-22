@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  3D PORTFOLIO — customization guide
+  ============================================================
+  1. Your name / role      → search for "YOUR NAME" and "Your Role"
+  2. Bio text              → search for "BIO_TEXT"
+  3. Tools chips           → edit the .chip list in the About section
+  4. Contact links         → search for "EMAIL_ADDRESS" / social hrefs
+  5. Project cards         → each .work-card has a data-title/data-tag
+                             and a placeholder tile. Swap the tile's
+                             background-image (or drop an <img>) for
+                             your own renders. There are 6 slots, add
+                             more by copying a .work-card block.
+  6. Hero 3D model         → currently a procedural faceted gem
+                             (Three.js IcosahedronGeometry). Swap for
+                             your own .glb model by loading it with
+                             THREE.GLTFLoader instead of the geometry
+                             block marked "HERO MODEL" below.
+  ============================================================
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Havya Pandya — 3D Artist Portfolio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+  :root{
+    --bg-void:#15161a;
+    --bg-panel:#1e2024;
+    --bg-panel-hi:#26282e;
+    --ink:#eef0ef;
+    --ink-dim:#8b8d96;
+    --axis-blue:#4d8dff;
+    --axis-amber:#ffb454;
+    --grid-line:rgba(255,255,255,0.055);
+    --radius:2px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg-void);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    overflow-x:hidden;
+  }
+  ::selection{ background:var(--axis-blue); color:#0a0a0c; }
+
+  /* background grid — viewport floor plane */
+  .floor-grid{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size:48px 48px;
+    mask-image:radial-gradient(ellipse at 50% 0%, black 0%, transparent 70%);
+  }
+
+  /* ---------- top HUD nav ---------- */
+  .hud-nav{
+    position:fixed; top:0; left:0; right:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:20px 32px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px; letter-spacing:0.04em;
+    color:var(--ink-dim);
+    mix-blend-mode:difference;
+  }
+  .hud-nav .brand{ color:var(--ink); font-weight:500; }
+  .hud-nav .brand span{ color:var(--axis-blue); }
+  .hud-links{ display:flex; gap:28px; }
+  .hud-links a{ color:var(--ink-dim); text-decoration:none; transition:color .2s; }
+  .hud-links a:hover{ color:var(--ink); }
+
+  /* ---------- hero / viewport ---------- */
+  .hero{
+    position:relative; height:100vh; min-height:640px;
+    display:flex; align-items:center; justify-content:center;
+    z-index:1;
+  }
+  #hero-canvas{ position:absolute; inset:0; width:100%; height:100%; cursor:grab; }
+  #hero-canvas:active{ cursor:grabbing; }
+
+  .hero-copy{
+    position:relative; z-index:2; text-align:center; pointer-events:none;
+  }
+  .hero-eyebrow{
+    font-family:'JetBrains Mono',monospace; font-size:12px;
+    letter-spacing:0.18em; text-transform:uppercase; color:var(--axis-amber);
+    margin-bottom:18px;
+  }
+  .hero-title{
+    font-family:'Space Grotesk',sans-serif; font-weight:700;
+    font-size:clamp(2.6rem, 8vw, 6rem); line-height:0.98; letter-spacing:-0.02em;
+  }
+  .hero-sub{
+    margin-top:20px; font-size:1.05rem; color:var(--ink-dim);
+    font-family:'Inter',sans-serif; max-width:480px; margin-left:auto; margin-right:auto;
+  }
+
+  /* HUD overlays inside viewport */
+  .hud-coords{
+    position:absolute; top:90px; right:32px; z-index:3;
+    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-dim);
+    text-align:right; line-height:1.7;
+  }
+  .hud-coords b{ color:var(--axis-blue); font-weight:500; }
+
+  .render-toggle{
+    position:absolute; bottom:40px; right:32px; z-index:3;
+    display:flex; align-items:center; gap:10px;
+    background:var(--bg-panel); border:1px solid var(--grid-line);
+    padding:8px 14px; border-radius:var(--radius);
+    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-dim);
+    cursor:pointer; user-select:none; transition:border-color .2s;
+  }
+  .render-toggle:hover{ border-color:var(--axis-blue); }
+  .render-toggle .dot{
+    width:7px; height:7px; border-radius:50%; background:var(--axis-blue);
+    box-shadow:0 0 8px var(--axis-blue);
+  }
+
+  .orbit-hint{
+    position:absolute; bottom:40px; left:32px; z-index:3;
+    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-dim);
+    display:flex; align-items:center; gap:8px;
+  }
+  .orbit-hint .key{
+    border:1px solid var(--grid-line); border-radius:3px; padding:2px 6px; color:var(--ink);
+  }
+
+  /* axis gizmo */
+  .gizmo{ position:absolute; bottom:100px; left:34px; z-index:3; opacity:0.85; }
+
+  .scroll-cue{
+    position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
+    z-index:3; font-family:'JetBrains Mono',monospace; font-size:10px;
+    color:var(--ink-dim); letter-spacing:0.15em; text-transform:uppercase;
+    animation:pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{opacity:.35;} 50%{opacity:.9;} }
+
+  /* ---------- section shell ---------- */
+  section{ position:relative; z-index:1; padding:120px 32px; max-width:1240px; margin:0 auto; }
+  .section-head{ display:flex; align-items:baseline; gap:18px; margin-bottom:56px; }
+  .section-index{
+    font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--axis-blue);
+  }
+  .section-title{
+    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:2rem; letter-spacing:-0.01em;
+  }
+  .section-rule{ flex:1; height:1px; background:var(--grid-line); }
+
+  /* ---------- work grid ---------- */
+  .work-grid{
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:28px;
+    perspective:1200px;
+  }
+  @media (max-width:900px){ .work-grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:600px){ .work-grid{ grid-template-columns:1fr; } }
+
+  .work-card{
+    position:relative; border-radius:var(--radius); overflow:hidden;
+    background:var(--bg-panel); border:1px solid var(--grid-line);
+    transform-style:preserve-3d; transition:transform .12s ease-out, border-color .3s;
+    cursor:pointer;
+  }
+  .work-card:hover{ border-color:var(--axis-blue); }
+  .work-tile{
+    height:240px; width:100%;
+    display:flex; align-items:center; justify-content:center;
+    position:relative; overflow:hidden; background:#101114;
+  }
+  .work-tile img{
+    width:100%; height:100%; object-fit:cover; display:block;
+    transform:translateZ(18px) scale(1.02);
+    transition:transform .4s ease;
+  }
+  .work-card:hover .work-tile img{ transform:translateZ(18px) scale(1.08); }
+  .work-tile .angle-count{
+    position:absolute; bottom:10px; right:12px; z-index:2;
+    font-family:'JetBrains Mono',monospace; font-size:10px; color:#eef0ef;
+    background:rgba(0,0,0,0.55); padding:3px 8px; border-radius:3px;
+    letter-spacing:0.04em;
+  }
+  .work-meta{ padding:16px 18px 20px; transform:translateZ(30px); }
+  .work-tag{
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--axis-amber);
+    text-transform:uppercase; letter-spacing:0.08em;
+  }
+  .work-name{
+    font-family:'Space Grotesk',sans-serif; font-size:1.05rem; font-weight:500; margin-top:6px;
+  }
+  .work-id{
+    position:absolute; top:12px; left:14px; z-index:2;
+    font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--ink-dim);
+  }
+
+  /* second grid for supporting single-shot pieces */
+  .work-grid-secondary{
+    display:grid; grid-template-columns:repeat(4, 1fr); gap:22px;
+    perspective:1200px; margin-top:22px;
+  }
+  @media (max-width:900px){ .work-grid-secondary{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:600px){ .work-grid-secondary{ grid-template-columns:1fr; } }
+  .work-grid-secondary .work-tile{ height:170px; }
+
+  /* ---------- about / inspector panel ---------- */
+  .inspector{
+    background:var(--bg-panel); border:1px solid var(--grid-line); border-radius:var(--radius);
+    display:grid; grid-template-columns:220px 1fr; gap:0;
+  }
+  @media (max-width:720px){ .inspector{ grid-template-columns:1fr; } }
+  .inspector-row{
+    display:contents;
+  }
+  .inspector-label{
+    padding:22px 24px; font-family:'JetBrains Mono',monospace; font-size:11px;
+    color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.08em;
+    border-top:1px solid var(--grid-line); border-right:1px solid var(--grid-line);
+  }
+  .inspector-value{
+    padding:22px 24px; border-top:1px solid var(--grid-line); font-size:0.98rem;
+  }
+  .inspector-row:first-child .inspector-label,
+  .inspector-row:first-child .inspector-value{ border-top:none; }
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{
+    font-family:'JetBrains Mono',monospace; font-size:11px; padding:5px 10px;
+    background:var(--bg-panel-hi); border:1px solid var(--grid-line); border-radius:3px;
+    color:var(--ink);
+  }
+  .inspector-value.bio{ color:var(--ink-dim); line-height:1.7; max-width:60ch; }
+
+  /* ---------- footer / contact ---------- */
+  footer{
+    position:relative; z-index:1; padding:80px 32px 48px; text-align:center;
+    border-top:1px solid var(--grid-line);
+  }
+  .footer-title{
+    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:1.8rem; margin-bottom:20px;
+  }
+  .footer-links{
+    display:flex; justify-content:center; gap:26px; flex-wrap:wrap;
+    font-family:'JetBrains Mono',monospace; font-size:12.5px;
+  }
+  .footer-links a{ color:var(--ink-dim); text-decoration:none; transition:color .2s; }
+  .footer-links a:hover{ color:var(--axis-blue); }
+  .footer-note{
+    margin-top:40px; font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--ink-dim); opacity:.6;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .scroll-cue{ animation:none; }
+    html{ scroll-behavior:auto; }
+  }
+
+  /* ---------- lightbox ---------- */
+  .lightbox{
+    position:fixed; inset:0; z-index:100; background:rgba(10,11,13,0.94);
+    display:none; align-items:center; justify-content:center;
+    backdrop-filter:blur(6px);
+  }
+  .lightbox.open{ display:flex; }
+  .lb-stage{ position:relative; max-width:min(1100px, 90vw); max-height:82vh; }
+  .lb-stage img, .lb-stage video{
+    max-width:min(1100px, 90vw); max-height:82vh; display:block;
+    border:1px solid var(--grid-line); border-radius:var(--radius);
+    box-shadow:0 30px 80px rgba(0,0,0,0.5);
+  }
+  .lb-caption{ margin-top:16px; text-align:center; }
+  .lb-title{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:1.1rem; }
+  .lb-tag{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--axis-amber); margin-top:4px; }
+  .lb-counter{
+    position:absolute; top:-34px; right:0; font-family:'JetBrains Mono',monospace;
+    font-size:11px; color:var(--ink-dim);
+  }
+  .lb-close{
+    position:absolute; top:24px; right:28px; z-index:101;
+    background:none; border:1px solid var(--grid-line); color:var(--ink);
+    width:38px; height:38px; border-radius:50%; cursor:pointer; font-size:16px;
+    transition:border-color .2s;
+  }
+  .lb-close:hover{ border-color:var(--axis-blue); }
+  .lb-nav{
+    position:relative; z-index:101; background:none; border:1px solid var(--grid-line);
+    color:var(--ink); width:46px; height:46px; border-radius:50%; cursor:pointer;
+    font-size:22px; margin:0 18px; transition:border-color .2s, color .2s; flex-shrink:0;
+  }
+  .lb-nav:hover{ border-color:var(--axis-blue); color:var(--axis-blue); }
+  @media (max-width:720px){
+    .lb-nav{ width:38px; height:38px; margin:0 8px; }
+    .lb-counter{ top:-28px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="floor-grid"></div>
+
+<nav class="hud-nav">
+  <div class="brand">HAVYA<span>_</span>PANDYA</div>
+  <div class="hud-links">
+    <a href="#work">work</a>
+    <a href="#about">about</a>
+    <a href="#contact">contact</a>
+  </div>
+</nav>
+
+<!-- ================= HERO / VIEWPORT ================= -->
+<section class="hero" style="padding:0;">
+  <canvas id="hero-canvas"></canvas>
+
+  <div class="hero-copy">
+    <div class="hero-eyebrow">Render_Viewport · v1.0</div>
+    <h1 class="hero-title">HAVYA PANDYA</h1>
+    <p class="hero-sub">3D Artist — Game Art, Product Visualization &amp; Architectural Walkthroughs. 4+ years across Blender, Maya &amp; Unreal Engine 5.</p>
+  </div>
+
+  <div class="hud-coords" id="hud-coords">X <b>0.00</b><br>Y <b>0.00</b></div>
+
+  <svg class="gizmo" width="64" height="64" viewBox="0 0 64 64">
+    <line x1="32" y1="32" x2="58" y2="32" stroke="#ff6b6b" stroke-width="2"/>
+    <text x="60" y="36" fill="#ff6b6b" font-family="JetBrains Mono" font-size="9">X</text>
+    <line x1="32" y1="32" x2="32" y2="6" stroke="#63d67f" stroke-width="2"/>
+    <text x="28" y="8" fill="#63d67f" font-family="JetBrains Mono" font-size="9">Y</text>
+    <line x1="32" y1="32" x2="14" y2="48" stroke="#4d8dff" stroke-width="2"/>
+    <text x="4" y="54" fill="#4d8dff" font-family="JetBrains Mono" font-size="9">Z</text>
+    <circle cx="32" cy="32" r="2.5" fill="#eef0ef"/>
+  </svg>
+
+  <div class="orbit-hint"><span class="key">drag</span> to orbit</div>
+
+  <div class="render-toggle" id="render-toggle"><span class="dot"></span><span id="render-toggle-label">shaded</span></div>
+
+  <div class="scroll-cue">scroll ↓</div>
+</section>
+
+<!-- ================= WORK ================= -->
+<section id="work">
+  <div class="section-head">
+    <span class="section-index">01</span>
+    <h2 class="section-title">Selected Work</h2>
+    <div class="section-rule"></div>
+  </div>
+
+  <div class="work-grid" id="work-grid">
+
+    <div class="work-card" data-title="Gujarat University Campus Walkthrough" data-tag="Architectural Walkthrough · ★ Best Project Award" data-images='["../assets/gujarat-university-campus-walkthrough-1.jpg","../assets/gujarat-university-campus-walkthrough-2.jpg","../assets/gujarat-university-campus-walkthrough-3.jpg","../assets/gujarat-university-campus-walkthrough-4.jpg","../assets/gujarat-university-campus-walkthrough-5.jpg","../assets/gujarat-university-campus-walkthrough-6.jpg"]'>
+      <div class="work-id">PROJ_01</div>
+      <div class="work-tile">
+        <img src="../assets/gujarat-university-campus-walkthrough-1.jpg" alt="Gujarat University campus walkthrough render" loading="lazy">
+        <span class="angle-count">6 renders</span>
+      </div>
+      <div class="work-meta">
+        <div class="work-tag">Architectural Walkthrough · ★ Best Project Award</div>
+        <div class="work-name">Gujarat University Campus Walkthrough</div>
+      </div>
+    </div>
+
+    <div class="work-card" data-title="Sci-Fi Helmet" data-tag="Hard Surface · Product Render" data-images='["../assets/sci-fi-helmet-1.jpg","../assets/sci-fi-helmet-2.jpg"]'>
+      <div class="work-id">PROJ_02</div>
+      <div class="work-tile">
+        <img src="../assets/sci-fi-helmet-1.jpg" alt="Sci-fi helmet render" loading="lazy">
+        <span class="angle-count">2 renders</span>
+      </div>
+      <div class="work-meta">
+        <div class="work-tag">Hard Surface · Product Render</div>
+        <div class="work-name">Sci-Fi Helmet</div>
+      </div>
+    </div>
+
+    <div class="work-card" data-title="Vintage Radio" data-tag="Product Visualization · PBR" data-images='["../assets/vintage-radio-1.jpg","../assets/vintage-radio-2.jpg","../assets/vintage-radio-3.jpg","../assets/vintage-radio-4.jpg","../assets/vintage-radio-5.jpg"]'>
+      <div class="work-id">PROJ_03</div>
+      <div class="work-tile">
+        <img src="../assets/vintage-radio-1.jpg" alt="Vintage radio product render" loading="lazy">
+        <span class="angle-count">5 renders</span>
+      </div>
+      <div class="work-meta">
+        <div class="work-tag">Product Visualization · PBR</div>
+        <div class="work-name">Vintage Radio</div>
+      </div>
+    </div>
+
+    <div class="work-card" data-title="Katana" data-tag="Prop Design · Game-Ready" data-images='["../assets/katana-1.jpg","../assets/katana-2.jpg"]'>
+      <div class="work-id">PROJ_04</div>
+      <div class="work-tile">
+        <img src="../assets/katana-1.jpg" alt="Katana prop render" loading="lazy">
+        <span class="angle-count">2 renders</span>
+      </div>
+      <div class="work-meta">
+        <div class="work-tag">Prop Design · Game-Ready</div>
+        <div class="work-name">Katana</div>
+      </div>
+    </div>
+
+    <div class="work-card" data-title="Smartwatch" data-tag="Consumer Electronics · Photoreal" data-images='["../assets/smartwatch-1.jpg","../assets/smartwatch-2.jpg"]'>
+      <div class="work-id">PROJ_05</div>
+      <div class="work-tile">
+        <img src="../assets/smartwatch-1.jpg" alt="Smartwatch product render" loading="lazy">
+        <span class="angle-count">2 renders</span>
+      </div>
+      <div class="work-meta">
+        <div class="work-tag">Consumer Electronics · Photoreal</div>
+        <div class="work-name">Smartwatch</div>
+      </div>
+    </div>
+
+    <div class="work-card" data-title="Console Controller" data-tag="Consumer Electronics · Photoreal" data-images='["../assets/console-controller-1.jpg","../assets/console-controller-2.jpg"]'>
+      <div class="work-id">PROJ_06</div>
+      <div class="work-tile">
+        <img src="../assets/console-controller-1.jpg" alt="Console controller render" loading="lazy">
+        <span class="angle-count">2 renders</span>
+      </div>
+      <div class="work-meta">
+        <div class="work-tag">Consumer Electronics · Photoreal</div>
+        <div class="work-name">Console Controller</div>
+      </div>
+    </div>
+
+    <div class="work-card" data-title="Sci-Fi Armor Suit" data-tag="Character Armor · Hard Surface" data-images='["../assets/sci-fi-armor-suit-1.jpg","../assets/sci-fi-armor-suit-2.jpg"]'>
+      <div class="work-id">PROJ_07</div>
+      <div class="work-tile">
+        <img src="../assets/sci-fi-armor-suit-1.jpg" alt="Sci-fi armor suit render" loading="lazy">
+        <span class="angle-count">2 renders</span>
+      </div>
+      <div class="work-meta">
+        <div class="work-tag">Character Armor · Hard Surface</div>
+        <div class="work-name">Sci-Fi Armor Suit</div>
+      </div>
+    </div>
+
+    <div class="work-card" data-title="Porsche 911 Study" data-tag="Vehicle · Cinematic Lighting" data-images='["../assets/porsche-911-study-1.jpg","../assets/porsche-911-study-2.jpg"]'>
+      <div class="work-id">PROJ_08</div>
+      <div class="work-tile">
+        <img src="../assets/porsche-911-study-1.jpg" alt="Porsche 911 render" loading="lazy">
+        <span class="angle-count">2 renders</span>
+      </div>
+      <div class="work-meta">
+        <div class="work-tag">Vehicle · Cinematic Lighting</div>
+        <div class="work-name">Porsche 911 Study</div>
+      </div>
+    </div>
+
+    <div class="work-card" data-title="Unreal Engine Environments" data-tag="Real-Time · UE5, Lumen &amp; Nanite" data-images='["../assets/unreal-engine-environments-1.jpg","../assets/unreal-engine-environments-2.jpg","../assets/unreal-engine-environments-3.mp4","../assets/unreal-engine-environments-4.mp4","../assets/unreal-engine-environments-5.jpg"]'>
+      <div class="work-id">PROJ_09</div>
+      <div class="work-tile">
+        <img src="../assets/unreal-engine-environments-1.jpg" alt="Unreal Engine gothic castle environment render" loading="lazy">
+        <span class="angle-count">5 · incl. video</span>
+      </div>
+      <div class="work-meta">
+        <div class="work-tag">Real-Time · UE5, Lumen &amp; Nanite</div>
+        <div class="work-name">Unreal Engine Environments</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="display:flex; align-items:center; gap:14px; margin:56px 0 26px;">
+    <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-dim); letter-spacing:0.1em; text-transform:uppercase;">More Renders</span>
+    <div style="flex:1; height:1px; background:var(--grid-line);"></div>
+  </div>
+
+  <div class="work-grid-secondary" id="work-grid-secondary">
+    <div class="work-card" data-title="Robot Study" data-tag="Character / Prop" data-images='["../assets/robot-study-1.jpg"]'>
+      <div class="work-tile"><img src="../assets/robot-study-1.jpg" alt="Robot character render" loading="lazy"></div>
+      <div class="work-meta"><div class="work-tag">Character / Prop</div><div class="work-name">Robot Study</div></div>
+    </div>
+    <div class="work-card" data-title="Walkie-Talkie" data-tag="Product Render" data-images='["../assets/walkie-talkie-1.jpg"]'>
+      <div class="work-tile"><img src="../assets/walkie-talkie-1.jpg" alt="Walkie-talkie render" loading="lazy"></div>
+      <div class="work-meta"><div class="work-tag">Product Render</div><div class="work-name">Walkie-Talkie</div></div>
+    </div>
+    <div class="work-card" data-title="Upasna" data-tag="Architecture" data-images='["../assets/upasna-1.jpg"]'>
+      <div class="work-tile"><img src="../assets/upasna-1.jpg" alt="Upasna amphitheatre architectural render" loading="lazy"></div>
+      <div class="work-meta"><div class="work-tag">Architecture</div><div class="work-name">Upasna</div></div>
+    </div>
+    <div class="work-card" data-title="Samurai" data-tag="Samurai Armor &amp; Katana" data-images='["../assets/samurai-1.jpg"]'>
+      <div class="work-tile"><img src="../assets/samurai-1.jpg" alt="Samurai armor and katana render" loading="lazy"></div>
+      <div class="work-meta"><div class="work-tag">Samurai Armor &amp; Katana</div><div class="work-name">Samurai</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ABOUT ================= -->
+<section id="about">
+  <div class="section-head">
+    <span class="section-index">02</span>
+    <h2 class="section-title">About</h2>
+    <div class="section-rule"></div>
+  </div>
+
+  <div class="inspector">
+    <div class="inspector-row">
+      <div class="inspector-label">Name</div>
+      <div class="inspector-value">Havya Pandya</div>
+    </div>
+    <div class="inspector-row">
+      <div class="inspector-label">Role</div>
+      <div class="inspector-value">3D Artist — Game Art, Product Visualization &amp; Architectural Walkthroughs</div>
+    </div>
+    <div class="inspector-row">
+      <div class="inspector-label">Location</div>
+      <div class="inspector-value">Ahmedabad, Gujarat, India</div>
+    </div>
+    <div class="inspector-row">
+      <div class="inspector-label">Tools</div>
+      <div class="inspector-value">
+        <div class="chips">
+          <span class="chip">Blender</span>
+          <span class="chip">Autodesk Maya</span>
+          <span class="chip">3ds Max</span>
+          <span class="chip">ZBrush</span>
+          <span class="chip">Substance Painter</span>
+          <span class="chip">Marmoset Toolbag</span>
+          <span class="chip">Unreal Engine 5</span>
+          <span class="chip">Unity</span>
+        </div>
+      </div>
+    </div>
+    <div class="inspector-row">
+      <div class="inspector-label">Bio</div>
+      <div class="inspector-value bio">Results-driven 3D artist with 4+ years of hands-on experience in modeling, PBR texturing, UV unwrapping, lighting, and rendering. Delivered game-ready assets, photorealistic product visualizations, and architectural walkthroughs across academic, freelance, and shipped commercial work — including sole 3D artist duties on a published Android game. Currently expanding into real-time rendering with Lumen and Nanite in Unreal Engine 5. Open to full-time, freelance, and remote opportunities in game art, VFX, or archviz.</div>
+    </div>
+    <div class="inspector-row">
+      <div class="inspector-label">Education</div>
+      <div class="inspector-value">M.Sc. Animation, Gujarat University (2024–2026) · B.Sc. Animation, Gujarat University (2021–2024), CGPA 9.0/10</div>
+    </div>
+    <div class="inspector-row">
+      <div class="inspector-label">Contact</div>
+      <div class="inspector-value">
+        <a href="mailto:havyapandya4@gmail.com" style="color:var(--ink); text-decoration:none; border-bottom:1px solid var(--grid-line);">havyapandya4@gmail.com</a>
+        &nbsp;·&nbsp;
+        <a href="tel:+919879814973" style="color:var(--ink); text-decoration:none; border-bottom:1px solid var(--grid-line);">+91 98798 14973</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CONTACT ================= -->
+<footer id="contact">
+  <div class="footer-title">Let's build something.</div>
+  <div class="footer-links">
+    <a href="mailto:havyapandya4@gmail.com">email</a>
+    <a href="https://www.artstation.com/havyapandya5" target="_blank" rel="noopener">artstation</a>
+    <a href="https://linkedin.com/in/havyapandya" target="_blank" rel="noopener">linkedin</a>
+    <a href="https://play.google.com/store/apps/details?id=com.shinigamistudios.colordrop" target="_blank" rel="noopener">color drop (play store)</a>
+    <a href="https://youtube.com/@havyapandya3072?si=yeCBPM3Jy1ZNkUBC" target="_blank" rel="noopener">youtube</a>
+  </div>
+  <div class="footer-note">rendered in a browser · viewport template v1.0</div>
+</footer>
+
+<div class="lightbox" id="lightbox">
+  <button class="lb-close" id="lb-close" aria-label="Close">✕</button>
+  <button class="lb-nav lb-prev" id="lb-prev" aria-label="Previous">‹</button>
+  <div class="lb-stage">
+    <div id="lb-media-wrap">
+      <img id="lb-image" src="" alt="">
+    </div>
+    <div class="lb-caption">
+      <div class="lb-title" id="lb-title"></div>
+      <div class="lb-tag" id="lb-tag"></div>
+    </div>
+    <div class="lb-counter" id="lb-counter"></div>
+  </div>
+  <button class="lb-nav lb-next" id="lb-next" aria-label="Next">›</button>
+</div>
+
+<script>
+(function(){
+  // ---------------- HERO 3D VIEWPORT ----------------
+  const canvas = document.getElementById('hero-canvas');
+  const heroSection = canvas.parentElement;
+  const scene = new THREE.Scene();
+
+  function getSize(){ return { w: heroSection.clientWidth, h: heroSection.clientHeight }; }
+  let { w, h } = getSize();
+
+  const camera = new THREE.PerspectiveCamera(45, w/h, 0.1, 100);
+  camera.position.set(0, 0, 6.2);
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(w, h);
+
+  // lights — two-tone, echoing the palette
+  const ambient = new THREE.AmbientLight(0x2a2d33, 1.4);
+  scene.add(ambient);
+  const keyLight = new THREE.DirectionalLight(0x4d8dff, 2.0);
+  keyLight.position.set(4, 5, 6);
+  scene.add(keyLight);
+  const rimLight = new THREE.DirectionalLight(0xffb454, 1.1);
+  rimLight.position.set(-5, -3, -4);
+  scene.add(rimLight);
+
+  // ---- HERO MODEL (swap this block for a GLTFLoader call to use your own .glb) ----
+  const geometry = new THREE.IcosahedronGeometry(1.9, 1);
+  const material = new THREE.MeshStandardMaterial({
+    color: 0x4d8dff, flatShading: true, metalness: 0.15, roughness: 0.45,
+    wireframe: false
+  });
+  const mesh = new THREE.Mesh(geometry, material);
+  scene.add(mesh);
+
+  const wireGeo = new THREE.EdgesGeometry(geometry);
+  const wireMat = new THREE.LineBasicMaterial({ color: 0xeef0ef, transparent:true, opacity:0.12 });
+  const wireframeOverlay = new THREE.LineSegments(wireGeo, wireMat);
+  mesh.add(wireframeOverlay);
+  // ---- end HERO MODEL block ----
+
+  // pointer-driven orbit (manual, no external addon needed)
+  let dragging = false, lastX = 0, lastY = 0;
+  let rotY = 0.4, rotX = 0.2;
+  let autoSpin = true;
+
+  canvas.addEventListener('pointerdown', (e) => {
+    dragging = true; autoSpin = false; lastX = e.clientX; lastY = e.clientY;
+  });
+  window.addEventListener('pointerup', () => { dragging = false; });
+  window.addEventListener('pointermove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1;
+    const hud = document.getElementById('hud-coords');
+    if (e.clientY < rect.bottom && e.clientY > rect.top) {
+      hud.innerHTML = 'X <b>' + nx.toFixed(2) + '</b><br>Y <b>' + (-ny).toFixed(2) + '</b>';
+    }
+    if (dragging) {
+      const dx = e.clientX - lastX, dy = e.clientY - lastY;
+      rotY += dx * 0.006;
+      rotX += dy * 0.006;
+      lastX = e.clientX; lastY = e.clientY;
+    }
+  });
+
+  // wireframe / shaded toggle
+  const toggle = document.getElementById('render-toggle');
+  const toggleLabel = document.getElementById('render-toggle-label');
+  let wireframeMode = false;
+  toggle.addEventListener('click', () => {
+    wireframeMode = !wireframeMode;
+    material.wireframe = wireframeMode;
+    wireMat.opacity = wireframeMode ? 0 : 0.12;
+    toggleLabel.textContent = wireframeMode ? 'wireframe' : 'shaded';
+  });
+
+  function animate(){
+    requestAnimationFrame(animate);
+    if (autoSpin) rotY += 0.0022;
+    mesh.rotation.y += (rotY - mesh.rotation.y) * 0.08;
+    mesh.rotation.x += (rotX - mesh.rotation.x) * 0.08;
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    const s = getSize();
+    camera.aspect = s.w / s.h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(s.w, s.h);
+  });
+
+  // ---------------- WORK CARD TILT ----------------
+  const cards = document.querySelectorAll('.work-card');
+  cards.forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const px = (e.clientX - rect.left) / rect.width - 0.5;
+      const py = (e.clientY - rect.top) / rect.height - 0.5;
+      card.style.transform = `perspective(900px) rotateX(${(-py*10).toFixed(2)}deg) rotateY(${(px*10).toFixed(2)}deg) translateZ(6px)`;
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = 'perspective(900px) rotateX(0deg) rotateY(0deg) translateZ(0px)';
+    });
+  });
+
+  // ---------------- LIGHTBOX ----------------
+  const lightbox = document.getElementById('lightbox');
+  const lbMediaWrap = document.getElementById('lb-media-wrap');
+  const lbTitle = document.getElementById('lb-title');
+  const lbTag = document.getElementById('lb-tag');
+  const lbCounter = document.getElementById('lb-counter');
+  let currentImages = [], currentIndex = 0, currentTitle = '', currentTag = '';
+
+  function openLightbox(images, title, tag, startIndex){
+    currentImages = images; currentTitle = title; currentTag = tag; currentIndex = startIndex || 0;
+    renderLightbox();
+    lightbox.classList.add('open');
+  }
+  function isVideo(src){ return /\.mp4($|\?)/i.test(src) || src.startsWith('data:video'); }
+  function renderLightbox(){
+    const src = currentImages[currentIndex];
+    lbMediaWrap.innerHTML = '';
+    if (isVideo(src)) {
+      const video = document.createElement('video');
+      video.src = src; video.controls = true; video.autoplay = true;
+      video.loop = true; video.muted = true; video.playsInline = true;
+      lbMediaWrap.appendChild(video);
+    } else {
+      const img = document.createElement('img');
+      img.src = src; img.alt = currentTitle;
+      lbMediaWrap.appendChild(img);
+    }
+    lbTitle.textContent = currentTitle;
+    lbTag.textContent = currentTag;
+    lbCounter.textContent = (currentIndex+1) + ' / ' + currentImages.length;
+  }
+  function closeLightbox(){ lightbox.classList.remove('open'); lbMediaWrap.innerHTML = ''; }
+  function nextImage(){ currentIndex = (currentIndex+1) % currentImages.length; renderLightbox(); }
+  function prevImage(){ currentIndex = (currentIndex-1+currentImages.length) % currentImages.length; renderLightbox(); }
+
+  cards.forEach(card => {
+    card.addEventListener('click', () => {
+      const images = JSON.parse(card.getAttribute('data-images') || '[]');
+      const title = card.getAttribute('data-title') || '';
+      const tag = card.getAttribute('data-tag') || '';
+      if (images.length) openLightbox(images, title, tag, 0);
+    });
+  });
+
+  document.getElementById('lb-close').addEventListener('click', closeLightbox);
+  document.getElementById('lb-next').addEventListener('click', nextImage);
+  document.getElementById('lb-prev').addEventListener('click', prevImage);
+  lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
+  window.addEventListener('keydown', (e) => {
+    if (!lightbox.classList.contains('open')) return;
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowRight') nextImage();
+    if (e.key === 'ArrowLeft') prevImage();
+  });
+})();
+</script>
+
+</body>
+</html>
