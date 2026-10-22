@@ -13,7 +13,7 @@
 <meta name="theme-color" content="#07060B">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Share+Tech+Mono&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Share+Tech+Mono&family=Turret+Road:wght@700;800&display=swap">
 <style>
 :root{
   --void:#07060B;
@@ -25,6 +25,7 @@
   --volt:#F9F002;
   --line:rgba(5,217,232,.25);
   --display:"Chakra Petch", "Arial Narrow", sans-serif;
+  --name:"Turret Road", "Chakra Petch", sans-serif;
   --mono:"Share Tech Mono", ui-monospace, Menlo, monospace;
   --gutter:clamp(16px, 4vw, 56px);
   --cut:14px;
@@ -59,7 +60,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:60;
   padding:14px var(--gutter);font:400 .875rem var(--mono);text-transform:uppercase;letter-spacing:.06em;
   padding-bottom:34px;background:linear-gradient(180deg,rgba(7,6,11,.95) 0%,rgba(7,6,11,.75) 55%,rgba(7,6,11,0) 100%)}
 .top a{text-decoration:none}
-.top .mark{font:700 1.125rem var(--display);letter-spacing:.04em}
+.top .mark{font:800 1.25rem var(--name);letter-spacing:.06em}
 .top .mark i{font-style:normal;color:var(--pink)}
 .top nav{display:flex;gap:clamp(14px,3vw,30px);align-items:center}
 .top nav a{color:#AEBBD0}
@@ -84,7 +85,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:60;
 .hud b{color:var(--pink);font-weight:400}
 .title{position:absolute;z-index:2;left:var(--gutter);right:var(--gutter);bottom:clamp(40px,9vh,96px)}
 .title .kana{font:400 clamp(.95rem,1.6vw,1.25rem) var(--mono);color:var(--pink);letter-spacing:.3em;margin-bottom:6px}
-.glitch{position:relative;display:inline-block;font:700 clamp(3.2rem,12.5vw,12.5rem)/.86 var(--display);text-transform:uppercase;letter-spacing:-.01em;
+.glitch{position:relative;display:inline-block;font:800 clamp(3.2rem,9.6vw,11rem)/.9 var(--name);white-space:nowrap;text-transform:uppercase;letter-spacing:.03em;
   color:var(--ice);text-shadow:0 0 30px rgba(5,217,232,.35)}
 .glitch::before,.glitch::after{content:attr(data-text);position:absolute;inset:0;pointer-events:none}
 .glitch::before{color:var(--pink);transform:translate(-3px,0);clip-path:inset(0 0 0 0);mix-blend-mode:screen;animation:slice-a 3.2s infinite steps(1)}
@@ -298,6 +299,9 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
 @media (max-width:760px){
   html{scroll-snap-type:none}
   .top .status{display:none}
+  .top .mark{font-size:1rem;letter-spacing:.03em}
+  .top nav{gap:12px}
+  .glitch{font-size:clamp(3rem,15vw,5rem);white-space:normal}
   .hud.tl{display:none}
   .hud.tr{top:64px}
   .frame-hud,.readout,.playhead,.skipwork{display:none}
@@ -351,10 +355,12 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
 </header>
 
 <section class="open" aria-label="Introduction">
-  <img class="poster" src="../assets/unreal-engine-environments-1.jpg" alt="">
-  <video autoplay muted loop playsinline preload="auto" poster="../assets/unreal-engine-environments-1.jpg" aria-hidden="true">
-    <source src="../assets/unreal-engine-environments-3.mp4" type="video/mp4">
-  </video>
+  <img class="poster" src="../assets/hero-ue5-poster.jpg" alt="">
+  <video id="hero-video" autoplay muted loop playsinline preload="auto" poster="../assets/hero-ue5-poster.jpg" aria-hidden="true"></video>
+  <script>
+    // sharper 1080p loop for larger screens, the lighter 720p one for phones
+    (function(v){ v.src = '../assets/' + (innerWidth > 760 ? 'hero-ue5-1080.mp4' : 'unreal-engine-environments-3.mp4'); })(document.getElementById('hero-video'));
+  </script>
   <div class="tint"></div><div class="grid"></div><div class="shade"></div>
   <div class="hud tl" aria-hidden="true">Sys/portfolio v2.0<br>Node: Ahmedabad, IN<br>Render: UE5 Lumen</div>
   <div class="hud tr" aria-hidden="true">23.0225° N<br>72.5714° E<br><b>Signal locked</b></div>
@@ -742,7 +748,7 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
     const title = open.querySelector('.title');
     open.addEventListener('mousemove', e => {
       const px = e.clientX / innerWidth - .5, py = e.clientY / innerHeight - .5;
-      media.forEach(m => m.style.transform = `scale(1.06) translate(${-px * 18}px, ${-py * 12}px)`);
+      media.forEach(m => m.style.transform = `scale(1.02) translate(${-px * 10}px, ${-py * 7}px)`);
       title.style.transform = `translate(${px * 12}px, ${py * 8}px)`;
     });
     open.addEventListener('mouseleave', () => { media.forEach(m => m.style.transform = ''); title.style.transform = ''; });
