@@ -391,7 +391,7 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
   </div>
   <div class="viewport" id="viewport">
     <div class="vp-hud stats" aria-hidden="true">
-      Tris <b id="st-tris">241,048</b><br>Materials <b>23</b><br>Textures <b>PBR, Substance Painter</b><br>Mode <b id="st-mode">Textured</b>
+      Tris <b id="st-tris">198,170</b><br>Materials <b>7</b><br>Textures <b>PBR, Substance Painter</b><br>Mode <b id="st-mode">Textured</b>
     </div>
     <div class="modes" role="group" aria-label="View mode">
       <button class="mode" data-mode="textured" aria-pressed="true">Textured</button>
@@ -907,7 +907,7 @@ async function start(){
   const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
   let gltf;
   try {
-    gltf = await loader.loadAsync('../assets/models/porsche-911.glb?v=2', ev => {
+    gltf = await loader.loadAsync('../assets/models/porsche-911.glb?v=3', ev => {
       const mb = (ev.loaded / 1048576).toFixed(1);
       const p = Math.min(1, ev.loaded / 3723824);
       meter.style.width = (p * 100) + '%'; label.textContent = 'Loading model ' + mb + ' MB';
@@ -928,7 +928,7 @@ async function start(){
     tris += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3;
   });
   document.getElementById('st-tris').textContent = Math.round(tris).toLocaleString('en-US');
-  const isGlass = m => m.name === 'M_glass';
+  const isGlass = m => m.name === 'Glass' || m.name === 'M_glass';
   const clay = new THREE.MeshStandardMaterial({ color:0x7d838d, roughness:.72, metalness:0, envMapIntensity:.45 });
   const clayGlass = new THREE.MeshStandardMaterial({ color:0x9aa3b0, roughness:.1, transparent:true, opacity:.35 });
   const wire = new THREE.MeshBasicMaterial({ color:0x05d9e8, wireframe:true, transparent:true, opacity:.55 });
