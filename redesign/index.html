@@ -199,8 +199,11 @@ dialog::backdrop{background:#000}
 .v header{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:18px var(--gutter);border-bottom:1px solid var(--line)}
 .v h3{font:700 clamp(1.3rem,2.4vw,1.9rem) var(--display);text-transform:uppercase;display:inline}
 .v .count{font:400 .875rem var(--mono);color:var(--pink);margin-left:14px}
-.v .close{font:400 .875rem var(--mono);color:var(--cyan);text-transform:uppercase}
-.v .close:hover{color:var(--pink)}
+.v header{align-items:center}
+.v .close{flex:none;width:44px;height:44px;display:grid;place-items:center;color:var(--cyan);background:rgba(7,6,11,.75);
+  box-shadow:inset 0 0 0 1px var(--cyan);clip-path:polygon(0 0,calc(100% - 9px) 0,100% 9px,100% 100%,9px 100%,0 calc(100% - 9px));transition:background .15s,color .15s}
+.v .close svg{width:18px;height:18px;stroke:currentColor;stroke-width:2;stroke-linecap:square}
+.v .close:hover{background:var(--pink);color:var(--void);box-shadow:none}
 .v .frame{position:relative;display:flex;align-items:center;justify-content:center;min-height:0;padding:18px var(--gutter)}
 .v .frame img,.v .frame video{max-height:100%;max-width:100%;object-fit:contain;box-shadow:0 0 0 1px var(--line)}
 .v .nav{position:absolute;top:50%;transform:translateY(-50%);width:50px;height:50px;font:400 1.3rem var(--mono);color:var(--cyan);background:rgba(7,6,11,.75);box-shadow:inset 0 0 0 1px var(--cyan)}
@@ -459,7 +462,7 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
   <div class="v">
     <header>
       <div><h3 id="v-title"></h3><span class="count" id="v-count"></span></div>
-      <button class="close" id="v-close">[ Close ]</button>
+      <button class="close" id="v-close" aria-label="Close" title="Close (Esc)"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M3 3l12 12M15 3L3 15"/></svg></button>
     </header>
     <div class="frame" id="v-frame">
       <button class="nav prev" id="v-prev" aria-label="Previous frame">&lt;</button>
