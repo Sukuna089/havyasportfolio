@@ -325,6 +325,10 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
   <div id="boot-lines"></div>
   <div class="meter"><b id="boot-meter"></b></div>
 </div>
+<script>
+  // safety net: never let the boot screen cover the site, even if the main script fails
+  setTimeout(function(){ var b=document.getElementById('boot'); if(b){ b.classList.add('gone'); document.documentElement.classList.remove('booting'); setTimeout(function(){ b.remove(); },600); } }, 4500);
+</script>
 <div class="reticle" id="reticle" aria-hidden="true"></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <a class="skip" href="#reel">Skip to the work</a>
@@ -576,6 +580,7 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
   const wide = matchMedia('(min-width: 761px)');
   let current = -1, ticking = false;
   function activate(idx){
+    if (!shots[idx]) return;
     current = idx;
     shots.forEach((s, k) => s.classList.toggle('on', k === idx));
     thumbs.forEach((t, k) => t.setAttribute('aria-current', k === idx ? 'true' : 'false'));
@@ -590,13 +595,15 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
     ticking = false;
     const max = track.scrollWidth - track.clientWidth;
     bar.style.width = (max > 0 ? track.scrollLeft / max * 100 : 0) + '%';
-    const idx = Math.round(track.scrollLeft / track.clientWidth);
+    const w = track.clientWidth;
+    const idx = w ? Math.max(0, Math.min(n - 1, Math.round(track.scrollLeft / w))) : 0;
     if (idx !== current) activate(idx);
   }
   const req = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
   track.addEventListener('scroll', req, { passive:true });
   addEventListener('resize', () => { if (current >= 0) track.scrollLeft = current * track.clientWidth; req(); });
-  update();
+  activate(0); track.scrollLeft = 0;
+  addEventListener('load', req);
   prevB.addEventListener('click', () => goTo(current - 1));
   nextB.addEventListener('click', () => goTo(current + 1));
   timeline.addEventListener('click', e => { const a = e.target.closest('[data-go]'); if (a) { e.preventDefault(); goTo(+a.dataset.go); } });
