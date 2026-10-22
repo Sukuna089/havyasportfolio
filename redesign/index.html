@@ -180,7 +180,7 @@ section.page{position:relative;padding:clamp(80px,14vh,150px) var(--gutter);scro
 .term .body{padding:22px 22px 30px;font:400 clamp(.875rem,1.2vw,1rem)/1.75 var(--mono)}
 .term .cmd{color:var(--pink);margin-top:18px}
 .term .cmd:first-child{margin-top:0}
-.term .cmd::before{content:"havya@ahmedabad:~$ ";color:var(--cyan)}
+.term .cmd::before{content:"havya:~$ ";color:var(--cyan)}
 .term .out{color:var(--ice);padding-left:2ch}
 .term .out em{font-style:normal;color:var(--volt)}
 
@@ -188,6 +188,9 @@ section.page{position:relative;padding:clamp(80px,14vh,150px) var(--gutter);scro
 .contact{background:radial-gradient(ellipse at 20% 100%, rgba(255,42,109,.18), transparent 60%),var(--void);padding-bottom:56px}
 .contact .big{display:inline-block;margin-top:30px;font:700 clamp(1.5rem,5.4vw,4.6rem)/1.05 var(--display);text-decoration:none;word-break:break-word;
   color:var(--cyan);text-shadow:0 0 24px rgba(5,217,232,.45);transition:color .15s,text-shadow .15s}
+.reach{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin-top:30px}
+.reach .big{margin-top:0}
+.contact .big.phone{font-size:clamp(1.3rem,3.6vw,3rem);color:var(--ice);text-shadow:0 0 18px rgba(209,247,255,.25)}
 .contact .big:hover{color:var(--pink);text-shadow:3px 0 var(--cyan),-3px 0 var(--volt),0 0 28px rgba(255,42,109,.6)}
 .links{display:flex;flex-wrap:wrap;gap:12px;margin-top:44px}
 .foot{margin-top:90px;padding-top:20px;border-top:1px solid var(--line);color:var(--dim);font:400 .8125rem var(--mono);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;text-transform:uppercase}
@@ -411,7 +414,7 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
 <section class="page" id="credits" aria-labelledby="credits-h">
   <h2 id="credits-h"><span class="mono">// profile</span>Who's behind the renders</h2>
   <div class="term" role="region" aria-label="Profile">
-    <div class="bar"><span>havya@ahmedabad</span><span>profile.sh</span></div>
+    <div class="bar"><span>havya</span><span>profile.sh</span></div>
     <div class="body">
       <div class="cmd">whoami</div>
       <div class="out">Havya Pandya. 3D artist, Ahmedabad, Gujarat, India.</div>
@@ -429,7 +432,7 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
       <div class="out">Four years of game-ready assets, photoreal product renders and architectural walkthroughs for coursework, freelance clients and a published game. Currently going deep on real-time rendering with Lumen and Nanite in Unreal Engine 5.</div>
       <div id="term-log" aria-live="polite"><div class="out" style="margin-top:18px;color:var(--volt)">This terminal is live. Type <em>help</em> to see what you can ask, or tap a command below.</div></div>
       <form id="term-form" autocomplete="off">
-        <label for="term-in">havya@ahmedabad:~$ </label>
+        <label for="term-in">havya:~$ </label>
         <input id="term-in" spellcheck="false" autocapitalize="off" aria-label="Type a command, for example help">
       </form>
     </div>
@@ -445,9 +448,12 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
 </section>
 
 <section class="page contact" id="contact" aria-labelledby="contact-h">
-  <h2 id="contact-h"><span class="mono">// connect</span>Jack in</h2>
+  <h2 id="contact-h"><span class="mono">// connect</span>Get in contact</h2>
   <p class="lede">Open to full-time, freelance and remote work in game art, VFX and archviz.</p>
-  <a class="big" href="mailto:havyapandya4@gmail.com">havyapandya4@gmail.com</a>
+  <div class="reach">
+    <a class="big" href="mailto:havyapandya4@gmail.com">havyapandya4@gmail.com</a>
+    <a class="big phone" href="tel:+919879814973">+91 98798 14973</a>
+  </div>
   <div class="links">
     <a class="btn ghost" href="https://www.artstation.com/havyapandya5" target="_blank" rel="noopener">ArtStation</a>
     <a class="btn ghost" href="https://linkedin.com/in/havyapandya" target="_blank" rel="noopener">LinkedIn</a>
@@ -770,6 +776,7 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
   const termIn = document.getElementById('term-in');
   const EMAIL = 'havyapandya4@gmail.com';
   const mail = `<a href="mailto:${EMAIL}">${EMAIL}</a>`;
+  const phone = '<a href="tel:+919879814973">+91 98798 14973</a>';
   const ALL = SHOTS.concat(OUTTAKES);
   const line = (html, cls = 'out') => { const d = document.createElement('div'); d.className = cls; d.innerHTML = html; termLog.appendChild(d); };
   const TEXT = {
@@ -781,9 +788,9 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
     education: 'M.Sc. Animation, Gujarat University, 2024–2026<br>B.Sc. Animation, Gujarat University, 2021–2024, CGPA 9.0/10',
     about: 'Four years of game-ready assets, photoreal product renders and architectural walkthroughs. Currently going deep on Lumen and Nanite in Unreal Engine 5.',
     socials: '<a href="https://www.artstation.com/havyapandya5" target="_blank" rel="noopener">ArtStation</a>  <a href="https://linkedin.com/in/havyapandya" target="_blank" rel="noopener">LinkedIn</a>  <a href="https://youtube.com/@havyapandya3072" target="_blank" rel="noopener">YouTube</a>',
-    contact: 'Email ' + mail + '. Open to full-time, freelance and remote work.',
+    contact: 'Email ' + mail + ' or call ' + phone + '. Open to full-time, freelance and remote work.',
   };
-  const ALIAS = { 'skills.txt':'skills', '~/tools':'tools', 'shipped.log':'shipped', 'awards.log':'awards', 'education.txt':'education', 'about.md':'about', links:'socials', email:'contact', resume:'education' };
+  const ALIAS = { 'skills.txt':'skills', '~/tools':'tools', 'shipped.log':'shipped', 'awards.log':'awards', 'education.txt':'education', 'about.md':'about', links:'socials', email:'contact', phone:'contact', call:'contact', resume:'education' };
   function run(raw){
     const cmd = raw.trim(); if (!cmd) return;
     const cl = document.createElement('div'); cl.className = 'cmd'; cl.textContent = cmd; termLog.appendChild(cl);
@@ -805,7 +812,7 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
     }
     else if (name === 'model' || name === 'spin' || name === '3d') { line('Jumping to the live Porsche model. Try <em>wireframe</em> or <em>clay</em>.'); document.getElementById('model').scrollIntoView({ behavior: calm ? 'auto' : 'smooth' }); }
     else if (name === 'wireframe' || name === 'wire' || name === 'clay' || name === 'textured') { const md = name.startsWith('wire') ? 'wire' : name; dispatchEvent(new CustomEvent('model:mode', { detail: md })); line('Model view set to ' + md + '.'); document.getElementById('model').scrollIntoView({ behavior: calm ? 'auto' : 'smooth' }); }
-    else if (name === 'hire') line('Good call. Reach Havya at ' + mail + '. Available for full-time, freelance and remote roles in game art, VFX and archviz.');
+    else if (name === 'hire') line('Good call. Reach Havya at ' + mail + ' or ' + phone + '. Available for full-time, freelance and remote roles in game art, VFX and archviz.');
     else if (name === 'ls') line('renders/&nbsp; tools/&nbsp; shipped.log&nbsp; awards.log&nbsp; education.txt&nbsp; about.md');
     else if (name === 'clear') termLog.innerHTML = '';
     else if (name === 'date') line(esc(new Date().toString()));
