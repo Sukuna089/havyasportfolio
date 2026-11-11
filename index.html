@@ -237,6 +237,10 @@ dialog::backdrop{background:#000}
 .mode{font:400 .8125rem var(--mono);text-transform:uppercase;color:var(--cyan);background:rgba(7,6,11,.75);padding:8px 12px;box-shadow:inset 0 0 0 1px var(--line)}
 .mode:hover{box-shadow:inset 0 0 0 1px var(--cyan)}
 .mode[aria-pressed="true"]{background:var(--cyan);color:var(--void);box-shadow:none}
+.picker{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.picker .mode{color:var(--pink)}
+.picker .mode:hover{box-shadow:inset 0 0 0 1px var(--pink)}
+.picker .mode[aria-pressed="true"]{background:var(--pink);color:var(--void)}
 .loading{position:absolute;inset:0;z-index:4;display:grid;place-items:center;align-content:center;gap:14px;font:400 .875rem var(--mono);color:var(--cyan);text-transform:uppercase;
   background:rgba(7,6,11,.85);transition:opacity .4s}
 .loading.done{opacity:0;pointer-events:none}
@@ -391,13 +395,17 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
 <section class="model" id="model" aria-labelledby="model-h">
   <div class="head">
     <div>
-      <h2 id="model-h" class="page-h"><span class="mono">// live model</span>Porsche 911, in your browser</h2>
-      <p class="lede">The real production mesh and Substance Painter textures. Drag to orbit, scroll or pinch to zoom, and switch views to see how it's built.</p>
+      <h2 id="model-h" class="page-h"><span class="mono">// live model</span><span id="model-name">Porsche 911</span>, in your browser</h2>
+      <p class="lede" id="model-lede">The real production mesh and Substance Painter textures. Drag to orbit, scroll or pinch to zoom, and switch views to see how it's built.</p>
+      <div class="picker" role="group" aria-label="Choose a model">
+        <button class="mode" data-model="porsche" aria-pressed="true">Porsche 911</button>
+        <button class="mode" data-model="note10" aria-pressed="false">Galaxy Note10</button>
+      </div>
     </div>
   </div>
   <div class="viewport" id="viewport">
     <div class="vp-hud stats" aria-hidden="true">
-      Tris <b id="st-tris">198,170</b><br>Materials <b>7</b><br>Textures <b>PBR, Substance Painter</b><br>Mode <b id="st-mode">Textured</b>
+      Tris <b id="st-tris">198,170</b><br>Materials <b id="st-mats">7</b><br>Textures <b id="st-tex">PBR, Substance Painter</b><br>Mode <b id="st-mode">Textured</b>
     </div>
     <div class="modes" role="group" aria-label="View mode">
       <button class="mode" data-mode="textured" aria-pressed="true">Textured</button>
@@ -498,7 +506,10 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
       frames:[1,2,3,4,5,6].map(n=>'gujarat-university-campus-walkthrough-'+n+'.jpg') },
     { title:'Porsche 911 Study', sector:'Vehicle', tools:'Cinematic lighting',
       line:'A vehicle study about cinematic lighting: fog, sodium lamps and headlight bloom.',
-      model:true, cover:'porsche-911-study-1.jpg', frames:['porsche-911-study-1.jpg','porsche-911-study-2.jpg'] },
+      model:'porsche', cover:'porsche-911-study-1.jpg', frames:['porsche-911-study-1.jpg','porsche-911-study-2.jpg'] },
+    { title:'Samsung Galaxy Note10', sector:'Product viz', tools:'Hard surface · Blender',
+      line:'A real-scale Galaxy Note10 and S Pen: tight bevels, camera island, buttons and ports.',
+      model:'note10', cover:'galaxy-note10-1.jpg', frames:[1,2,3,4].map(n=>'galaxy-note10-'+n+'.jpg') },
     { title:'Samurai Armor', sector:'Character', tools:'Hard surface',
       line:'Hard-surface character armor and katana, lit low and cold.',
       cover:'sci-fi-armor-suit-2.jpg', frames:['sci-fi-armor-suit-2.jpg','sci-fi-armor-suit-1.jpg','samurai-1.jpg'] },
@@ -564,7 +575,7 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
         <h2 data-text="${esc(s.title)}">${esc(s.title)}</h2>
         <p>${esc(s.line)}</p>
         ${s.award ? `<div class="award">${s.award}</div>` : ''}
-        <div class="frames"><button class="btn" data-i="${i}">Open ${count} ${count === 1 ? 'file' : 'files'}</button>${s.model ? ' <a class="btn ghost" href="#model">Spin it in 3D</a>' : ''}</div>
+        <div class="frames"><button class="btn" data-i="${i}">Open ${count} ${count === 1 ? 'file' : 'files'}</button>${s.model ? ` <a class="btn ghost" href="#model" data-model="${s.model}">Spin it in 3D</a>` : ''}</div>
       </div>`;
     track.appendChild(art);
     const t = document.createElement('a');
@@ -574,6 +585,7 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
     timeline.appendChild(t);
   });
   track.addEventListener('click', e => {
+    const m = e.target.closest('[data-model]'); if (m) { dispatchEvent(new CustomEvent('model:pick', { detail: m.dataset.model })); return; }
     const b = e.target.closest('[data-i]'); if (b) openViewer(SHOTS[+b.dataset.i]);
   });
 
@@ -863,8 +875,27 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
 const vp = document.getElementById('viewport');
 const label = document.getElementById('vp-label'), meter = document.getElementById('vp-meter'), loading = document.getElementById('vp-loading');
 const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
-let pending = null;
+const MODELS = {
+  porsche:  { name:'Porsche 911', file:'porsche-911.glb?v=5', bytes:3723824, mats:'7', tex:'PBR, Substance Painter',
+              lede:"The real production mesh and Substance Painter textures. Drag to orbit, scroll or pinch to zoom, and switch views to see how it's built." },
+  note10:   { name:'Galaxy Note10', file:'galaxy-note10.glb?v=2', bytes:520152, mats:'1', tex:'Base colour only', fit:true,
+              lede:'A real-scale Galaxy Note10 and S Pen, modelled in Blender. Switch to Wireframe to see the edge flow around the bevels, buttons and camera island.' },
+};
+const picker = [...document.querySelectorAll('.picker [data-model]')];
+let want = 'porsche', pending = null, loadModel = null;
 addEventListener('model:mode', e => { pending = e.detail; if (window.__setMode) window.__setMode(e.detail); });
+function pick(key){
+  if (!MODELS[key]) return;
+  want = key;
+  picker.forEach(b => b.setAttribute('aria-pressed', b.dataset.model === key ? 'true' : 'false'));
+  document.getElementById('model-name').textContent = MODELS[key].name;
+  document.getElementById('model-lede').textContent = MODELS[key].lede;
+  document.getElementById('st-mats').textContent = MODELS[key].mats;
+  document.getElementById('st-tex').textContent = MODELS[key].tex;
+  if (loadModel) loadModel(key); else go();
+}
+picker.forEach(b => b.addEventListener('click', () => pick(b.dataset.model)));
+addEventListener('model:pick', e => pick(e.detail));
 
 async function start(){
   label.textContent = 'Decrypting mesh…';
@@ -882,7 +913,6 @@ async function start(){
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   vp.prepend(renderer.domElement);
-  renderer.domElement.setAttribute('aria-label', '3D model of a Porsche 911. Drag to rotate, scroll to zoom.');
   renderer.domElement.setAttribute('role', 'img');
 
   const scene = new THREE.Scene();
@@ -910,64 +940,92 @@ async function start(){
   const grid = new THREE.GridHelper(24, 48, 0xff2a6d, 0x05d9e8);
   grid.material.transparent = true; grid.material.opacity = .22; grid.position.y = 0.001; scene.add(grid);
 
-  const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
-  let gltf;
-  try {
-    gltf = await loader.loadAsync('assets/models/porsche-911.glb?v=5', ev => {
-      const mb = (ev.loaded / 1048576).toFixed(1);
-      const p = Math.min(1, ev.loaded / 3723824);
-      meter.style.width = (p * 100) + '%'; label.textContent = 'Loading model ' + mb + ' MB';
-    });
-  } catch (e) { label.textContent = 'The model failed to load. Refresh to try again.'; return; }
-
-  const car = gltf.scene;
-  const box = new THREE.Box3().setFromObject(car), size = box.getSize(new THREE.Vector3()), center = box.getCenter(new THREE.Vector3());
-  car.position.sub(new THREE.Vector3(center.x, box.min.y, center.z));
-  scene.add(car);
-
-  // remember each mesh's real materials so view modes can swap them
-  const meshes = []; let tris = 0;
-  car.traverse(o => {
-    if (!o.isMesh) return;
-    o.castShadow = true; o.receiveShadow = true;
-    o.userData.orig = o.material; meshes.push(o);
-    tris += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3;
-  });
-  document.getElementById('st-tris').textContent = Math.round(tris).toLocaleString('en-US');
   const isGlass = m => m.name === 'Glass' || m.name === 'M_glass';
   const clay = new THREE.MeshStandardMaterial({ color:0x7d838d, roughness:.72, metalness:0, envMapIntensity:.45 });
   const clayGlass = new THREE.MeshStandardMaterial({ color:0x9aa3b0, roughness:.1, transparent:true, opacity:.35 });
   const wire = new THREE.MeshBasicMaterial({ color:0x05d9e8, wireframe:true, transparent:true, opacity:.55 });
   const wireFill = new THREE.MeshBasicMaterial({ color:0x07060b, polygonOffset:true, polygonOffsetFactor:1, polygonOffsetUnits:1 });
-  const wireOverlay = []; // second pass of wire lines over a dark fill
-  meshes.forEach(m => { const w = new THREE.Mesh(m.geometry, wire); w.visible = false; m.add(w); wireOverlay.push(w); });
+
+  const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
+  const cache = {};
+  let obj = null, meshes = [], wireOverlay = [], size = new THREE.Vector3(1,1,1), mode = 'textured', touched = false, token = 0;
 
   const statMode = document.getElementById('st-mode');
   const buttons = [...vp.querySelectorAll('.mode[data-mode]')];
-  function setMode(mode){
-    meshes.forEach(m => {
-      const o = m.userData.orig;
-      m.material = mode === 'clay' ? (isGlass(o) ? clayGlass : clay) : mode === 'wire' ? wireFill : o;
-      m.castShadow = mode !== 'wire';
+  function setMode(m){
+    mode = m;
+    meshes.forEach(x => {
+      const o = x.userData.orig;
+      x.material = m === 'clay' ? (isGlass(o) ? clayGlass : clay) : m === 'wire' ? wireFill : o;
+      x.castShadow = m !== 'wire';
     });
-    wireOverlay.forEach(w => w.visible = mode === 'wire');
-    grid.material.opacity = mode === 'wire' ? .4 : .22;
-    buttons.forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === mode ? 'true' : 'false'));
-    statMode.textContent = { textured:'Textured', clay:'Clay', wire:'Wireframe' }[mode];
+    wireOverlay.forEach(w => w.visible = m === 'wire');
+    grid.material.opacity = m === 'wire' ? .4 : .22;
+    buttons.forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === m ? 'true' : 'false'));
+    statMode.textContent = { textured:'Textured', clay:'Clay', wire:'Wireframe' }[m];
     needs = true;
   }
   window.__setMode = setMode;
   buttons.forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
 
+  const home = () => {
+    if (obj && obj.userData.fit) {
+      // fit the whole bounding sphere for tall or compact objects
+      const r = size.length() / 2, vf = THREE.MathUtils.degToRad(camera.fov) / 2;
+      const d = r / Math.sin(Math.min(vf, Math.atan(Math.tan(vf) * camera.aspect))) * 1.08;
+      const dir = new THREE.Vector3(.6, .32, .74).normalize();
+      controls.target.set(0, size.y * .5, 0); camera.position.copy(dir.multiplyScalar(d)).add(controls.target);
+      controls.update(); needs = true; return;
+    }
+    const d = Math.max(size.x, size.z) * 1.22 * Math.max(1, 1.25 / camera.aspect);
+    camera.position.set(d * .62, size.y * 1.05, d * .78); controls.target.set(0, size.y * .38, 0); controls.update(); needs = true;
+  };
+
+  loadModel = async k => {
+    const M = MODELS[k], my = ++token;
+    loading.classList.remove('done'); meter.style.width = '0%'; label.textContent = 'Decrypting mesh…';
+    let gltf = cache[k];
+    if (!gltf) {
+      try {
+        gltf = await loader.loadAsync('assets/models/' + M.file, ev => {
+          if (my !== token) return;
+          meter.style.width = (Math.min(1, ev.loaded / M.bytes) * 100) + '%';
+          label.textContent = 'Loading model ' + (ev.loaded / 1048576).toFixed(1) + ' MB';
+        });
+        cache[k] = gltf;
+      } catch (e) { if (my === token) label.textContent = 'The model failed to load. Refresh to try again.'; return; }
+    }
+    if (my !== token) return;
+    if (obj) scene.remove(obj);
+    obj = gltf.scene;
+    if (!obj.userData.prepped) {
+      if (M.fit) {
+        const b0 = new THREE.Box3().setFromObject(obj), s0 = b0.getSize(new THREE.Vector3());
+        obj.scale.setScalar(4.4 / Math.max(s0.x, s0.y, s0.z));
+      }
+      const box = new THREE.Box3().setFromObject(obj), c = box.getCenter(new THREE.Vector3());
+      obj.position.sub(new THREE.Vector3(c.x, box.min.y, c.z));
+      const ms = []; let tris = 0;
+      obj.traverse(o => {
+        if (!o.isMesh) return;
+        o.castShadow = true; o.receiveShadow = true; o.userData.orig = o.material; ms.push(o);
+        tris += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3;
+      });
+      const wo = ms.map(m => { const w = new THREE.Mesh(m.geometry, wire); w.visible = false; m.add(w); return w; });
+      obj.userData = { prepped:true, fit:!!M.fit, meshes:ms, wire:wo, tris, size:new THREE.Box3().setFromObject(obj).getSize(new THREE.Vector3()) };
+    }
+    scene.add(obj);
+    ({ meshes, wire:wireOverlay, size } = obj.userData);
+    document.getElementById('st-tris').textContent = Math.round(obj.userData.tris).toLocaleString('en-US');
+    renderer.domElement.setAttribute('aria-label', `3D model of the ${M.name}. Drag to rotate, scroll to zoom.`);
+    setMode(mode); touched = false; home();
+    loading.classList.add('done');
+  };
+
   const spinBtn = document.getElementById('spin');
   spinBtn.setAttribute('aria-pressed', String(controls.autoRotate));
   spinBtn.addEventListener('click', () => { controls.autoRotate = !controls.autoRotate; spinBtn.setAttribute('aria-pressed', String(controls.autoRotate)); });
-  const home = () => {
-    const d = Math.max(size.x, size.z) * 1.22 * Math.max(1, 1.25 / camera.aspect);
-    camera.position.set(d * .62, size.y * 1.05, d * .78); controls.target.set(0, size.y * .38, 0); controls.update();
-  };
   document.getElementById('reset').addEventListener('click', home);
-  let touched = false;
 
   // pause the turntable while someone is handling the model, resume after a moment
   let idle; controls.addEventListener('start', () => { touched = true; clearTimeout(idle); controls.autoRotate = false; });
@@ -984,14 +1042,14 @@ async function start(){
     const moved = controls.update();
     if (moved || needs || controls.autoRotate) { renderer.render(scene, camera); needs = false; }
   });
-  if (pending) setMode(pending);
-  loading.classList.add('done');
+  if (pending) mode = pending;
+  await loadModel(want);
   window.__modelReady = true;
 }
 
 // load the model only when the visitor gets near it
 let started = false;
-const go = () => { if (!started) { started = true; start(); } };
+function go(){ if (!started) { started = true; start(); } }
 new IntersectionObserver(es => { if (es[0].isIntersecting) go(); }, { rootMargin:'600px 0px' }).observe(vp);
 addEventListener('model:mode', go);
 </script>
