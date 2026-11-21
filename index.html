@@ -397,10 +397,6 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
     <div>
       <h2 id="model-h" class="page-h"><span class="mono">// live model</span><span id="model-name">Porsche 911</span>, in your browser</h2>
       <p class="lede" id="model-lede">The real production mesh and Substance Painter textures. Drag to orbit, scroll or pinch to zoom, and switch views to see how it's built.</p>
-      <div class="picker" role="group" aria-label="Choose a model">
-        <button class="mode" data-model="porsche" aria-pressed="true">Porsche 911</button>
-        <button class="mode" data-model="note10" aria-pressed="false">Galaxy Note10</button>
-      </div>
     </div>
   </div>
   <div class="viewport" id="viewport">
@@ -507,9 +503,6 @@ html.overdrive .glitch::before,html.overdrive .glitch::after{animation-duration:
     { title:'Porsche 911 Study', sector:'Vehicle', tools:'Cinematic lighting',
       line:'A vehicle study about cinematic lighting: fog, sodium lamps and headlight bloom.',
       model:'porsche', cover:'porsche-911-study-1.jpg', frames:['porsche-911-study-1.jpg','porsche-911-study-2.jpg'] },
-    { title:'Samsung Galaxy Note10', sector:'Product viz', tools:'Hard surface · Blender',
-      line:'A real-scale Galaxy Note10 and S Pen: tight bevels, camera island, buttons and ports.',
-      model:'note10', cover:'galaxy-note10-1.jpg', frames:[1,2,3,4].map(n=>'galaxy-note10-'+n+'.jpg') },
     { title:'Samurai Armor', sector:'Character', tools:'Hard surface',
       line:'Hard-surface character armor and katana, lit low and cold.',
       cover:'sci-fi-armor-suit-2.jpg', frames:['sci-fi-armor-suit-2.jpg','sci-fi-armor-suit-1.jpg','samurai-1.jpg'] },
@@ -878,8 +871,6 @@ const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const MODELS = {
   porsche:  { name:'Porsche 911', file:'porsche-911.glb?v=5', bytes:3723824, mats:'7', tex:'PBR, Substance Painter',
               lede:"The real production mesh and Substance Painter textures. Drag to orbit, scroll or pinch to zoom, and switch views to see how it's built." },
-  note10:   { name:'Galaxy Note10', file:'galaxy-note10.glb?v=2', bytes:520152, mats:'1', tex:'Base colour only', fit:true,
-              lede:'A real-scale Galaxy Note10 and S Pen, modelled in Blender. Switch to Wireframe to see the edge flow around the bevels, buttons and camera island.' },
 };
 const picker = [...document.querySelectorAll('.picker [data-model]')];
 let want = 'porsche', pending = null, loadModel = null;
